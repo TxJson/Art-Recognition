@@ -1,4 +1,4 @@
-# art_app_fyp
+# Art Detection Application
 
 A new Flutter project.
 
