@@ -1,5 +1,8 @@
 // Native Packages
+import 'package:art_app_fyp/widgets/screens/home/camera.dart';
 import 'package:flutter/material.dart';
+
+import 'package:art_app_fyp/redux/appstate.dart';
 
 // Plugin
 // import 'package:camera/camera.dart';
@@ -16,12 +19,26 @@ class MyHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: const BoxDecoration(color: Colors.green),
-        child: StoreConnector<int, int>(
-            converter: (store) => store.state,
-            builder: (context, value) {
-              return const Center(
-                child: Text('Home'),
-              );
-            }));
+        child: Scaffold(
+            body: StoreConnector<AppState, dynamic>(
+                converter: (store) => store.state.cameras,
+                builder: (context, cameras) {
+                  return Center(
+                    child: CameraView(cameras: cameras),
+                  );
+                }),
+            floatingActionButton: SizedBox(
+                width: 80,
+                height: 80,
+                child: FittedBox(
+                  child: FloatingActionButton(
+                    onPressed: () {},
+                    backgroundColor: Colors.black,
+                    splashColor: Colors.red.withOpacity(0.5),
+                    child: const Icon(Icons.center_focus_strong),
+                  ),
+                )),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat));
   }
 }
