@@ -1,19 +1,8 @@
-// Native packages
 import 'package:flutter/material.dart';
-
-// Screens
-import 'package:art_app_fyp/widgets/screens/list/main.dart';
-import 'package:art_app_fyp/widgets/screens/home/main.dart';
-import 'package:art_app_fyp/widgets/screens/favourite/main.dart';
-
-// Packages
+import 'package:art_app_fyp/screens/list/main.dart';
+import 'package:art_app_fyp/screens/home/main.dart';
+import 'package:art_app_fyp/screens/favourite/main.dart';
 import 'package:art_app_fyp/shared/helpers.dart';
-import 'package:art_app_fyp/redux/appstate.dart';
-
-// Redux
-import 'package:flutter_redux/flutter_redux.dart';
-// ignore: depend_on_referenced_packages
-import 'package:redux/redux.dart';
 
 enum AppPages {
   list(0),

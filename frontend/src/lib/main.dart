@@ -1,9 +1,6 @@
-// Native packages
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/redux/appstate.dart';
 import 'package:art_app_fyp/app.dart';
-
-// Plugins
 import 'package:flutter_redux/flutter_redux.dart';
 // ignore: depend_on_referenced_packages
 import 'package:redux/redux.dart';

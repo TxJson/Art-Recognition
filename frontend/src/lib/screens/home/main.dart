@@ -1,15 +1,7 @@
-// Native Packages
-import 'package:art_app_fyp/widgets/screens/home/camera.dart';
+import 'package:art_app_fyp/screens/home/camera.dart';
 import 'package:flutter/material.dart';
-
 import 'package:art_app_fyp/redux/appstate.dart';
-
-// Plugin
-// import 'package:camera/camera.dart';
-
-// Redux
 import 'package:flutter_redux/flutter_redux.dart';
-// ignore: depend_on_referenced_packages
 import 'package:redux/redux.dart';
 
 class MyHome extends StatelessWidget {
