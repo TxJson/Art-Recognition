@@ -1,1 +1,1 @@
-pip install tensorflow deeplake --user
+pip install tensorflow --user
