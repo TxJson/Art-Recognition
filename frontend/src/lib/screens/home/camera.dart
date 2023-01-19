@@ -59,8 +59,10 @@ class CameraViewState extends State<CameraView> {
 
     return MaterialApp(
         home: GestureDetector(
-            // Zoom functionality
-            // TODO: Known bug - When zooming in it always starts from 0
+
+            /// Zoom functionality Adapted from:
+            /// https://stackoverflow.com/questions/60424964/zoom-camera-in-flutter#:~:text=You%20can%20use%20cameraController.,limits%20for%20the%20zoom%20level.
+            /// TODO: Known bug - When zooming in it always starts from 0
             onScaleUpdate: (details) async {
               double max = await controller.getMaxZoomLevel();
               double min = await controller.getMinZoomLevel();
