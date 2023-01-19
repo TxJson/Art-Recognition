@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:art_app_fyp/screens/list/main.dart';
 import 'package:art_app_fyp/screens/home/main.dart';
 import 'package:art_app_fyp/screens/favourite/main.dart';
-import 'package:art_app_fyp/shared/helpers.dart';
+import 'package:art_app_fyp/shared/utilities.dart';
 
 enum AppPages {
   list(0),
