@@ -1,18 +1,18 @@
 
 install:
-	sh frontend/setup.sh
-	sh backend/setup.sh
+	sh app/setup.sh
+	sh app/setup.sh
 
-install-fe:
-	sh frontend/setup.sh
+install-app:
+	sh app/setup.sh
 
-install-be:
-	sh backend/setup.sh
+install-network:
+	sh network/setup.sh
 
-run-fe:
-	@echo "Running Frontend"
-	@cd frontend && make
+run-app:
+	@echo "Running Application"
+	@cd app && make
 
 run-be:
-	@echo "Running Backend"
-	@cd backend && make
+	@echo "Running Network"
+	@cd network && make
