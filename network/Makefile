@@ -27,4 +27,10 @@ all:
 	@py src/init.py
 
 install:
-	sh setup.sh
+	sh setup.sh -s
+
+install-datasets:
+	sh setup.sh -d
+
+clean:
+	sh setup.sh -c

@@ -1,13 +1,13 @@
 
 install:
-	sh app/setup.sh
-	sh app/setup.sh
+	@cd app && make install
+	@cd network && make install
 
 install-app:
-	sh app/setup.sh
+	@cd app && make install
 
 install-network:
-	sh network/setup.sh
+	@cd network && make install
 
 run-app:
 	@echo "Running Application"
