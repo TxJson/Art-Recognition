@@ -1,0 +1,9 @@
+# Dependencies
+# Usage: pip install -r dependencies.txt --user
+
+# Base ------------------------------------------------------------------------
+tensorflow
+
+# DeepSparse ------------------------------------------------------------------
+# https://github.com/ultralytics/yolov5/wiki/YOLOv5-with-Neural-Magic's-DeepSparse
+# deepsparse[server,yolo,onnxruntime]
