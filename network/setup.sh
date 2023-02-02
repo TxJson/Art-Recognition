@@ -20,7 +20,7 @@ download_datasets()
 {
     echo "Downloading Datasets"
 
-    [ -d "/datasets" ] && rm -fr dataset
+    [ -d "/datasets" ] && rm -fr datasets
     mkdir datasets
     cd datasets
 
@@ -39,7 +39,7 @@ setup()
     if [[ "$parsedVersion" -gt minParsed ]]
     then 
         install_dependencies
-        download_datasets        
+        # download_datasets        
     else
         echo "Invalid Python version"
         echo "Expected minimum $min"
