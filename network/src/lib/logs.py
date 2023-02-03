@@ -5,7 +5,7 @@ from termcolor import colored
 from datetime import datetime
 
 # Libraries
-import files as fb
+import lib.files as fb
 
 logDir = f'{os.getcwd()}/log'
 
@@ -13,28 +13,28 @@ filePath = f'{logDir}/{datetime.now():%Y%m%d-%H%M%S%z}.log'
 
 class headers():
     DEFAULT = ''
-    INFO = '[Info]'
-    ERROR = '[Error]'
-    WARNING = '[Warning]'
-    TRACE = '[Trace]'
+    INFO = '[INFO]'
+    ERROR = '[ERROR]'
+    WARNING = '[WARNING]'
+    TRACE = '[TRACE]'
 
-def log(msg, hType, color, default = 'Something went wrong'):
+def log(msg, headerType, color = 'white', default = 'Something went wrong'):
     message = msg if msg != None else default
-    print(composeMsg(message, color, hType))
-    fb.writeToFile(logDir, f"{hType} {message}")
+    print(composeMsg(message, color, headerType))
+    # fb.writeToFile(logDir, f"{headerType} {message}")
     
 
-def composeMsg(msg, color = 'white', hType = headers.DEFAULT):
-    return colored(f"{hType} {msg}", color)
+def composeMsg(msg, color = 'white', headerType = headers.DEFAULT):
+    return colored(f"[{datetime.now()}] {headerType} {msg}", color)
 
 def warning(msg = None):
-    log(msg, headers.WARNING, 'yellow')
+    log(msg, headerType=headers.WARNING, color='yellow')
 
 def error(msg = None):
-    log(msg, headers.ERROR, 'red')
+    log(msg, headerType=headers.ERROR, color='red')
 
 def info(msg = None):
-    log(msg, headers.INFO, 'white')
+    log(msg, headerType=headers.INFO, color='white')
 
 def trace(msg = None):
-    log(msg, headers.TRACE, 'blue')
+    log(msg, headerType=headers.TRACE, color='blue')

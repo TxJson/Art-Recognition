@@ -1,4 +1,7 @@
-from lib.files import getFiles
+# from lib.files import getFiles
 
-files = getFiles('./datasets', directories=['train'])
-print(files)
+from lib.logs import warning
+
+warning('hello')
+# files = getFiles('./datasets', directories=['train'])
+# print(files)
