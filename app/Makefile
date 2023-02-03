@@ -29,4 +29,4 @@ all:
 	@cd src && flutter run lib/main.dart
 
 install:
-	sh setup.sh
+	sh setup.sh -s
