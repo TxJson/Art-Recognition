@@ -39,20 +39,20 @@ def download_dataset(url, zipname, dir, name, extract=True, regen=False):
 
     
 
-def getJson(path):
+def get_json(path):
     jsonData = getFileContents(path)
     return json.loads(jsonData)   
 
 def get_datasets(regen=False):
     createPathIfNotExists(DATASETS)
-    sets = getJson(rf"./{DATASETS}.json")
+    sets = get_json(rf"./{DATASETS}.json")
     for attribute, value in sets.items():    
         download_dataset(value["path"], value["zip"], dir=DATASETS, name=attribute, regen=regen)
 
 def create_modules():
     print("Generating Modules")
     createPathIfNotExists(MODULES)
-    modules = getJson(rf"./{MODULES}.json")
+    modules = get_json(rf"./{MODULES}.json")
 
     for attribute, value in modules.items():
         print(rf"Generating module {attribute}")
