@@ -27,10 +27,13 @@ all:
 	@py src/init.py
 
 install:
+	@echo "$(PURPLE)Running Setup$(RESET)"
 	sh setup.sh -s
 
 install-f:
+	@echo "$(PURPLE)Running Setup with Force$(RESET)"
 	sh setup.sh -fs
 
 clean:
+	@echo "$(YELLOW)Cleaning...$(RESET)"
 	sh setup.sh -c
