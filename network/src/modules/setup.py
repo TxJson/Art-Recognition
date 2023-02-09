@@ -1,4 +1,4 @@
-import json, requests, sys, getopt
+import json, requests, sys
 from zipfile import ZipFile
 from filelink import *
 
