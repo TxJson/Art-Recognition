@@ -63,13 +63,13 @@ def create_modules():
         writeToFile(moduleStruct, content=json.dumps(value), newFile=True)        
 
 
-def cli():
-    arg = sys.argv[1:]
-    if arg == '-r':
+def cli(args):
+    arg = args[0]
+    if arg == '-r': # Regenerate datasets
         get_datasets(True)
     else:
         get_datasets(False)
 
     create_modules()
 
-cli()
+cli(sys.argv[1:])
