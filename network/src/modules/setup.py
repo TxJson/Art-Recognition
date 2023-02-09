@@ -1,6 +1,6 @@
 import json, requests, sys, getopt
-from filelink import *
 from zipfile import ZipFile
+from filelink import *
 
 DATASETS = "datasets"
 MODULES = "modules"
@@ -64,7 +64,10 @@ def create_modules():
 
 
 def cli(args):
-    arg = args[0]
+    arg = ''
+    if args:
+        arg = args[0]
+
     if arg == '-r': # Regenerate datasets
         get_datasets(True)
     else:
