@@ -29,8 +29,8 @@ all:
 install:
 	sh setup.sh -s
 
-install-datasets:
-	sh setup.sh -d
+install-f:
+	sh setup.sh -fs
 
 clean:
 	sh setup.sh -c

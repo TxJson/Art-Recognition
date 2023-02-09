@@ -16,22 +16,25 @@ install_dependencies()
     echo "Installation Complete"
 }
 
-download_datasets()
-{
-    echo "Downloading Datasets"
-
-    [ -d "/datasets" ] && rm -fr datasets
-    mkdir datasets
-    cd datasets
-
-    # Download Roboflow Dataset
-    # https://universe.roboflow.com/raya-al/french-paintings-raya/dataset/2#
-    mkdir roboflow
-    cd roboflow
-    curl -L "https://universe.roboflow.com/ds/kSrrrhVV5h?key=twBHoIOrE4" > roboflow.zip; unzip roboflow.zip; rm roboflow.zip
-
+setup_modules()
+{   
+    cd modules
+    py setup.py
+    
     cd ..
-    echo "Download Complete"
+}
+
+setupForce()
+{
+    if [[ "$parsedVersion" -gt minParsed ]]
+    then 
+        install_dependencies
+        clean
+        setup_modules        
+    else
+        echo "Invalid Python version"
+        echo "Expected minimum $min"
+    fi
 }
 
 setup()
@@ -39,7 +42,7 @@ setup()
     if [[ "$parsedVersion" -gt minParsed ]]
     then 
         install_dependencies
-        # download_datasets        
+        setup_modules        
     else
         echo "Invalid Python version"
         echo "Expected minimum $min"
@@ -48,9 +51,16 @@ setup()
 
 clean()
 {
+    cd modules
+
     # Remove datasets
     echo "Removing Datasets"
     rm -fr datasets
+
+    echo "Removing Modules"
+    rm -fr modules
+
+    cd ..
 }
 
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
@@ -61,7 +71,7 @@ minParsed=$(echo "${min//./}")
 
 cleanParam="c"
 setupParam="s"
-datasetsParam="d"
+forceParam="fs"
 
 if [ "$#" -eq  "0" ]
 then
@@ -76,7 +86,7 @@ else
                 ;;
             -$setupParam) setup
                 ;;
-            -$datasetsParam) download_datasets
+            -$forceParam) setupForce
                 ;;
             -*) echo "bad option $1"
                 ;;
