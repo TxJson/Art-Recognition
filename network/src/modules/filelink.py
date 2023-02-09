@@ -36,7 +36,7 @@ def getFileContents(path):
         return data
     
     # If path doesn't exist, raise exception
-    raise Exception(rf"Tried retriving file from path that does not exist: {path}")
+    raise Exception(rf"Tried retrieving file from path that does not exist: {path}")
 
 def removeFile(path):
     os.remove(path)

@@ -18,10 +18,10 @@ install_dependencies()
 
 setup_modules()
 {   
-    cd modules
+    cd src/modules
     py setup.py
     
-    cd ..
+    cd ../..
 }
 
 setupForce()
@@ -51,7 +51,7 @@ setup()
 
 clean()
 {
-    cd modules
+    cd src/modules
 
     # Remove datasets
     echo "Removing Datasets"
@@ -60,7 +60,7 @@ clean()
     echo "Removing Modules"
     rm -fr modules
 
-    cd ..
+    cd ../..
 }
 
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
