@@ -1,5 +1,10 @@
 */datasets/*
 __pycache__
-**/modules/modules
-**/modules/datasets
+**/modules/**
+**/datasets/**
 **/dependencies/**
+**/_temp/**
+
+# Don't want the yolo files
+yolov5m.pt
+yolov5s.pt

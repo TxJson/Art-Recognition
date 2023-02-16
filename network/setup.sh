@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SRCDIR="src"
-MODULEDIR="$SRCDIR/modules"
 DEPDIR="$SRCDIR/dependencies"
 
 SCRIPT_PATH="${BASH_SOURCE:-$0}"
@@ -54,9 +53,11 @@ setup_dependencies()
 
 setup_modules()
 {   
-    cd $MODULEDIR
-    py setup.py
-    
+    # Need to run from correct dir to ensure that generated files are in correct place
+    cd $SRCDIR
+
+    py run.py -sr
+
     cd $BASEDIR
 }
 
@@ -108,10 +109,7 @@ removeifexists()
 clean()
 {
     # Remove generated modules and datasets
-    removeifexists $MODULEDIR "datasets" "modules"
-
-    # Remove dependencies
-    removeifexists $SRCDIR "dependencies"
+    removeifexists $SRCDIR "datasets" "modules" "dependencies"
 }
 
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')

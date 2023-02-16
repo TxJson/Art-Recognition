@@ -3,6 +3,7 @@
 
 # Base ------------------------------------------------------------------------
 tensorflow==2.11.0
+ruamel.yaml
 
 # https://github.com/ultralytics/yolov5/wiki/YOLOv5-with-Neural-Magic's-DeepSparse
 # deepsparse[server,yolo,onnxruntime]==1.3.2

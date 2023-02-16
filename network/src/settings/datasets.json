@@ -3,6 +3,7 @@
         "path": "https://universe.roboflow.com/ds/kSrrrhVV5h?key=twBHoIOrE4",
         "zip": "roboflow",
         "folder": "roboflow",
-        "home": "https://universe.roboflow.com/raya-al/french-paintings-raya/dataset/2#"
+        "home": "https://universe.roboflow.com/raya-al/french-paintings-raya/dataset/2#",
+        "datafile": "data.yaml"
     }
 }
