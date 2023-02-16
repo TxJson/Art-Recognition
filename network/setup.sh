@@ -1,35 +1,71 @@
 #!/bin/bash
 
+SRCDIR="src"
+MODULEDIR="$SRCDIR/modules"
+DEPDIR="$SRCDIR/dependencies"
+
+SCRIPT_PATH="${BASH_SOURCE:-$0}"
+ABS_SCRIPT_PATH="$(realpath "${SCRIPT_PATH}")"
+BASEDIR="$(dirname "${ABS_SCRIPT_PATH}")"
+
 install_dependencies()
 {
     echo "Installing Dependencies"
 
-    pip3 install -r dependencies.txt --user --no-warn-script-location
+    echo "Installing local dependencies"
+    pip3 install -r $BASEDIR/local_dep.txt --user --no-warn-script-location
 
+    # Download and install datasets
     # Install YOLOv5
-    git clone https://github.com/ultralytics/yolov5  # Clone
-    cd yolov5
-    pip3 install -r requirements.txt --user --no-warn-script-location # Install
-    cd ..
-    rm -fr yolov5
+    echo "Installing YOLOv5"
+    if [[ ! -d "$DEPDIR/yolov5" ]]; then
+        cd $DEPDIR
 
-    echo "Installation Complete"
+        echo "Dependency Missing: YOLOv5 - Installing" 
+        git clone https://github.com/ultralytics/yolov5 yolov5 # Clone
+
+        cd $BASEDIR
+    fi
+
+    if [[ -d "$DEPDIR/yolov5" ]]; then        
+        cd $DEPDIR/yolov5
+        pip3 install -r requirements.txt --user --no-warn-script-location # Install pip dependencies
+        cd $BASEDIR
+    else
+        echo "Unable to locate $DEPDIR/yolov5, skipping dependency installation step"
+    fi
+
+    cd $BASEDIR
+    echo "Dependency Installation Complete"
+}
+
+setup_dependencies()
+{
+    mkdir -p $DEPDIR
+
+    if [[ -d "$DEPDIR" ]]; then    
+        install_dependencies
+
+        cd $BASEDIR
+    else
+        echo "Unable to locate $DEPDIR, skipping dependency installation step"
+    fi
 }
 
 setup_modules()
 {   
-    cd src/modules
+    cd $MODULEDIR
     py setup.py
     
-    cd ../..
+    cd $BASEDIR
 }
 
 setupForce()
 {
     if [[ "$parsedVersion" -gt minParsed ]]
     then 
-        install_dependencies
         clean
+        setup_dependencies
         setup_modules        
     else
         echo "Invalid Python version"
@@ -41,7 +77,7 @@ setup()
 {
     if [[ "$parsedVersion" -gt minParsed ]]
     then 
-        install_dependencies
+        setup_dependencies
         setup_modules        
     else
         echo "Invalid Python version"
@@ -49,18 +85,33 @@ setup()
     fi
 }
 
+removeifexists()
+{
+    dir=$1
+    args=${*:2}
+
+    if [[ -d "$dir" ]]; then
+        cd $dir
+
+        echo "Removing files [$args] in $dir"
+        for var in $args
+        do
+            rm -fr $var
+        done
+
+        cd $BASEDIR
+    else
+        echo "Unable to locate $dir, skipping this step"
+    fi
+}
+
 clean()
 {
-    cd src/modules
+    # Remove generated modules and datasets
+    removeifexists $MODULEDIR "datasets" "modules"
 
-    # Remove datasets
-    echo "Removing Datasets"
-    rm -fr datasets
-
-    echo "Removing Modules"
-    rm -fr modules
-
-    cd ../..
+    # Remove dependencies
+    removeifexists $SRCDIR "dependencies"
 }
 
 version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
