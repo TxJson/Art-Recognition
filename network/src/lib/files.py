@@ -1,7 +1,7 @@
 # File adapted and extended from https://github.com/TxJson/Converter
 
 from pathlib import Path
-import os
+import os, json, shutil
 
 def getPath(*args):
     str = ''
@@ -9,15 +9,43 @@ def getPath(*args):
         str += arg
     return str
 
+# Adapted from:
+# https://stackoverflow.com/questions/13118029/deleting-folders-in-python-recursively
+def removeDir(directory):
+    directory = Path(directory)
+    for item in directory.iterdir():
+        if item.is_dir():
+            removeDir(item)
+        else:
+            item.unlink()
+    directory.rmdir()
+
 def createPathsIfNotExist(*args):
     for arg in args:
         createPathIfNotExists(arg)
+
+def pathsExist(paths):
+    for path in paths:
+        if not pathExists(path):
+            return False
+    
+    return True
+
+def getJson(path):
+    jsonData = getFileContents(path)
+    return json.loads(jsonData)
 
 def pathExists(path):
     return os.path.exists(path)
 
 def createPathIfNotExists(path):
     Path(path).mkdir(parents=True, exist_ok=True)
+
+def getPathBetween(path, dest):
+    return os.path.relpath(path, dest)
+
+def getDirList(path):
+    return os.listdir(path)
 
 def writeToFile(path, content = None, newFile=False):
     mode = "w"

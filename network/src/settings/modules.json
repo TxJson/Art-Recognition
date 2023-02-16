@@ -1,0 +1,15 @@
+{
+    "art_detection": {
+        "framework": "yolov5",
+        "settings": {
+            "model": "yolov5m.pt",
+            "random": false,
+            "imgsize": 640,
+            "epochs": 3,
+            "batch": 16
+        },
+        "datasets": [
+            "roboflow"
+        ]
+    }
+}

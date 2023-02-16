@@ -1,8 +1,0 @@
-{
-    "art_detection": {
-        "framework": "yolov5",
-        "datasets": [
-            "roboflow"
-        ]
-    }
-}
