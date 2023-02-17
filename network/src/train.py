@@ -1,6 +1,5 @@
 import os
 import lib.files as f
-import dependencies.yolov5.train as yolov5
 
 def get_dataset_yamls(module):
     return f.getFiles(rf"modules/{module}/datasets", exactKey=[".yaml"])
