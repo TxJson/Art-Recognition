@@ -77,8 +77,8 @@ def create_dataset_yaml(path, framework, datasets, dataset_config):
         
         newDatafile = rf"{path}/datasets/{dataset}.yaml"
         f.writeToFile(newDatafile, content="", newFile=True) # Create empty file
-        with open(newDatafile, "w") as f:
-            yaml.dump(data, f)
+        with open(newDatafile, "w") as _file:
+            yaml.dump(data, _file)
 
 
 
