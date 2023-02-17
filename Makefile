@@ -9,6 +9,9 @@ install-app:
 install-network:
 	@cd network && make install
 
+install-network-f:
+	@cd network && make install-f
+
 run-app:
 	@echo "Running Application"
 	@cd app && make
