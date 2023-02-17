@@ -1,5 +1,5 @@
 import sys
-import lib.files as files
+import lib.files as f
 
 from train import train
 from setup import setup
@@ -21,7 +21,7 @@ def cli(args):
         run()
 
 def run():    
-    if not (files.pathsExist(REQUIREMENTS)):
+    if not (f.pathsExist(REQUIREMENTS)):
         print('Missing requirements...')
         setup()
 
