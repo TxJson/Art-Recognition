@@ -15,6 +15,7 @@ def extract_dataset(zipfile, zipname, dirpath, remove=True):
     if f.pathExists(zipfile):
         print(rf"Extracting {zipname}.zip")
         f.createPathIfNotExists(dirpath)
+        print(zipfile, zipname, dirpath)
         with ZipFile(zipfile, "r") as zobj:
             zobj.extractall(path=dirpath)
         
@@ -55,6 +56,7 @@ def get_datasets(regen=False):
     for attribute, value in sets.items():    
         download_dataset(value["path"], value["zip"], dir=DATASETS, name=attribute, regen=regen)
 
+# TODO: Make adaptable to more than just YOLOv5
 # Adapted from: https://stackoverflow.com/questions/29518833/editing-yaml-file-by-python
 def create_dataset_yaml(path, framework, datasets, dataset_config):
     f.createPathIfNotExists(rf"{path}/datasets")
@@ -97,18 +99,10 @@ def create_modules():
         f.writeToFile(moduleStruct, content=json.dumps(value), newFile=True)   
         create_dataset_yaml(path, value.get("framework"), value.get("datasets"), dataset_config)
 
-
-def cli(args):
-    arg = ''
-    if args:
-        arg = args[0]
-
-    if arg == '-r': # Regenerate datasets
-        get_datasets(True)
-    else:
-        get_datasets(False)
-
+def setup():
+    get_datasets()
     create_modules()
 
-def setup(args = []):
-    cli(args)
+def force_setup():
+    get_datasets(True)
+    create_modules()

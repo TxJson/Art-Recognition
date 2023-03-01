@@ -9,21 +9,23 @@ class AppState {
   final bool debugState;
   final int activeCameraIndex;
 
-  const AppState(
-      {this.cameras = const <CameraDescription>[],
-      this.detectionState = false,
-      this.debugState = false,
-      this.activeCameraIndex = 0});
+  const AppState({
+    this.cameras = const <CameraDescription>[],
+    this.detectionState = false,
+    this.debugState = false,
+    this.activeCameraIndex = 0,
+  });
 }
 
 // Only change passed variables in AppState, keep the rest the same
 AppState updateAppState(state,
-    {cameras, detectionState, debugState, activeCameraIndex}) {
+    {cameras, detectionState, debugState, activeCameraIndex, interpreter}) {
   return AppState(
-      cameras: cameras ?? state.cameras,
-      detectionState: detectionState ?? state.detectionState,
-      debugState: debugState ?? state.debugState,
-      activeCameraIndex: activeCameraIndex ?? state.activeCameraIndex);
+    cameras: cameras ?? state.cameras,
+    detectionState: detectionState ?? state.detectionState,
+    debugState: debugState ?? state.debugState,
+    activeCameraIndex: activeCameraIndex ?? state.activeCameraIndex,
+  );
 }
 
 AppState appReducer(AppState state, action) {

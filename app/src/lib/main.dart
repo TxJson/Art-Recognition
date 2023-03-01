@@ -12,6 +12,7 @@ void main() async {
       .ensureInitialized(); //Ensure plugin services are initialized
 
   final List<CameraDescription> cameras = await availableCameras();
+
   Store<AppState> store = Store<AppState>(appReducer,
       initialState: AppState(cameras: cameras, debugState: true),
       middleware: [thunkMiddleware]);

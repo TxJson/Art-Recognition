@@ -1,9 +1,26 @@
 {
-    "roboflow": {
+    "french-paintings-raya": {
         "path": "https://universe.roboflow.com/ds/kSrrrhVV5h?key=twBHoIOrE4",
-        "zip": "roboflow",
-        "folder": "roboflow",
+        "zip": "french-paintings-raya",
+        "folder": "french-paintings-raya",
         "home": "https://universe.roboflow.com/raya-al/french-paintings-raya/dataset/2#",
-        "datafile": "data.yaml"
+        "datafile": "data.yaml",
+        "expected_framework": "yolov5"
+    },
+    "artwork-frame-detection-v01": {
+        "path": "https://universe.roboflow.com/ds/S2YkHc9HQv?key=LT29p99AHp",
+        "zip": "artwork-frame-detection-v01",
+        "folder": "artwork-frame-detection-v01",
+        "home": "https://universe.roboflow.com/artworkframedetection/artwork-kz7ox/dataset/1#",
+        "datafile": "data.yaml",
+        "expected_framework": "yolov5"
+    },
+    "anpr-license-plates": {
+        "path": "https://universe.roboflow.com/ds/CqmTTnmQpe?key=04YLWQE0FU",
+        "zip": "anpr-license-plates",
+        "folder": "anpr-license-plates",
+        "home": "https://universe.roboflow.com/anpr-hqruj/anpr-ublyc",
+        "datafile": "data.yaml",
+        "expected_framework": "yolov5"
     }
 }

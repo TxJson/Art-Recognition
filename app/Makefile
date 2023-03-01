@@ -24,7 +24,7 @@ else
 endif
 
 all:
-	@echo "$(YELLOW)Ensure you have your testing device plugged in, or else it will not be recognised$(RESET)"
+	@echo "$(YELLOW)Ensure you have your testing device plugged in, or else it may not be recognised$(RESET)"
 	@echo "$(BLUE)Running Flutter$(RESET)"
 	@cd src && flutter run lib/main.dart
 
