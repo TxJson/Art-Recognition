@@ -1,0 +1,6 @@
+{
+    "accepted_frameworks": [
+        "yolov5"
+    ],
+    "exports_path": "./exports"
+}

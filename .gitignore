@@ -4,7 +4,9 @@ __pycache__
 **/datasets/**
 **/dependencies/**
 **/_temp/**
+.vscode
 
 # Don't want the yolo files
 yolov5m.pt
 yolov5s.pt
+yolov5n.pt

@@ -26,7 +26,7 @@ class MyAppState extends State<MyApp> {
   Widget navigationBar() {
     return BottomNavigationBar(
       backgroundColor: Colors.black,
-      unselectedItemColor: getHexColor('#949494'),
+      unselectedItemColor: Utilities.getHexColor('#949494'),
       selectedItemColor: Colors.white,
       showSelectedLabels: false,
       showUnselectedLabels: false,

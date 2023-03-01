@@ -24,7 +24,7 @@ endif
 
 all:
 	@echo "$(BLUE)Running python from src/init.py$(RESET)"
-	@py src/init.py
+	@py src/run.py
 
 install:
 	@echo "$(PURPLE)Running Setup$(RESET)"

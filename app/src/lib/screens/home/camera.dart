@@ -2,13 +2,21 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/shared/validators.dart';
 
+// import 'package:tflite/tflite.dart';
+
+import 'dart:math' as math;
+
+typedef Callback = void Function(List<dynamic> list, int h, int w);
+
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
 class CameraView extends StatefulWidget {
   final List<CameraDescription> cameras;
   final int activeCameraIndex;
+  // final Callback setRecognitions;
 
   // Default Constructor
+  // const CameraView(this.cameras, this.activeCameraIndex, this.setRecognitions);
   const CameraView(
       {Key? key, required this.cameras, required this.activeCameraIndex})
       : super(key: key);
@@ -19,6 +27,7 @@ class CameraView extends StatefulWidget {
 
 class CameraViewState extends State<CameraView> {
   late CameraController controller;
+  bool isDetecting = false;
 
   @override
   void initState() {
@@ -31,6 +40,31 @@ class CameraViewState extends State<CameraView> {
       }
 
       setState(() {});
+
+      controller.startImageStream((CameraImage img) async {
+        // if (!isDetecting) {
+        //   isDetecting = true;
+        //   await Tflite.detectObjectOnFrame(
+        //     bytesList: img.planes.map((plane) {
+        //       return plane.bytes;
+        //     }).toList(),
+        //     model: "SSDMobileNet",
+        //     imageHeight: img.height,
+        //     imageWidth: img.width,
+        //     imageMean: 127.5,
+        //     imageStd: 127.5,
+        //     numResultsPerClass: 3,
+        //     threshold: 0.4,
+        //   ).then((recognitions) {
+        //     /*
+        //       When setRecognitions is called here, the parameters are being passed on to the parent widget as callback. i.e. to the LiveFeed class
+        //        */
+        //     widget.setRecognitions(
+        //         recognitions as List<dynamic>, img.height, img.width);
+        //     isDetecting = false;
+        //   });
+        // }
+      });
     }).catchError((Object e) {
       if (e is CameraException) {
         switch (e.code) {
@@ -56,6 +90,24 @@ class CameraViewState extends State<CameraView> {
     if (!controller.value.isInitialized) {
       return Container();
     }
+
+    // var tmp = MediaQuery.of(context).size;
+    // var screenH = math.max(tmp.height, tmp.width);
+    // var screenW = math.min(tmp.height, tmp.width);
+
+    // tmp = controller.value.previewSize as Size;
+    // var previewH = math.max(tmp.height, tmp.width);
+    // var previewW = math.min(tmp.height, tmp.width);
+    // var screenRatio = screenH / screenW;
+    // var previewRatio = previewH / previewW;
+
+    // return OverflowBox(
+    //   maxHeight:
+    //       screenRatio > previewRatio ? screenH : screenW / previewW * previewH,
+    //   maxWidth:
+    //       screenRatio > previewRatio ? screenH / previewH * previewW : screenW,
+    //   child: CameraPreview(controller),
+    // );
 
     return MaterialApp(
         home: GestureDetector(

@@ -1,15 +1,53 @@
 {
+    "test": {
+        "framework": "yolov5",
+        "settings": {
+            "training": {
+                "weights": "yolov5n.pt",
+                "img": 640,
+                "epochs": 1,
+                "batch": 1
+            },
+            "export": {
+                "format": "tflite"
+            }
+        },
+        "datasets": [
+            "anpr-license-plates"
+        ]
+    },
     "art_detection": {
         "framework": "yolov5",
         "settings": {
-            "model": "yolov5m.pt",
-            "random": false,
-            "imgsize": 640,
-            "epochs": 3,
-            "batch": 16
+            "training": {
+                "weights": "yolov5n.pt",
+                "img": 640,
+                "epochs": 25,
+                "batch": 16
+            },
+            "export": {
+                "format": "tflite"
+            }
         },
         "datasets": [
-            "roboflow"
+            "french-paintings-raya"
+        ]
+    },
+    "license_plate_detection": {
+        "framework": "yolov5",
+        "settings": {
+            "training": {
+                "weights": "yolov5n.pt",
+                "img": 640,
+                "epochs": 25,
+                "batch": 16
+            },
+            "export": {
+                "format": "tflite"
+            }
+        },
+        "datasets": [
+            "anpr-license-plates"
         ]
     }
 }
