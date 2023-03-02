@@ -9,3 +9,19 @@ extension IntegerParsing on int {
     return this > low && this < high;
   }
 }
+
+extension NumberParsing on String {
+  int parseInt() {
+    return int.parse(this);
+  }
+
+  double parseDouble() {
+    return double.parse(this);
+  }
+}
+
+class Validators {
+  static dynamic defaultIfNull(dynamic item, dynamic defaultItem) {
+    return item ?? defaultItem;
+  }
+}

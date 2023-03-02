@@ -1,3 +1,4 @@
+import 'package:art_app_fyp/shared/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import './actions.dart';
@@ -9,23 +10,23 @@ class AppState {
   final bool debugState;
   final int activeCameraIndex;
 
-  const AppState({
-    this.cameras = const <CameraDescription>[],
-    this.detectionState = false,
-    this.debugState = false,
-    this.activeCameraIndex = 0,
-  });
+  const AppState(
+      {this.cameras = const <CameraDescription>[],
+      this.detectionState = false,
+      this.debugState = false,
+      this.activeCameraIndex = 0});
 }
 
 // Only change passed variables in AppState, keep the rest the same
 AppState updateAppState(state,
-    {cameras, detectionState, debugState, activeCameraIndex, interpreter}) {
+    {cameras, detectionState, debugState, activeCameraIndex}) {
   return AppState(
-    cameras: cameras ?? state.cameras,
-    detectionState: detectionState ?? state.detectionState,
-    debugState: debugState ?? state.debugState,
-    activeCameraIndex: activeCameraIndex ?? state.activeCameraIndex,
-  );
+      cameras: Validators.defaultIfNull(cameras, state.cameras),
+      detectionState:
+          Validators.defaultIfNull(detectionState, state.detectionState),
+      debugState: Validators.defaultIfNull(debugState, state.debugState),
+      activeCameraIndex:
+          Validators.defaultIfNull(activeCameraIndex, state.activeCameraIndex));
 }
 
 AppState appReducer(AppState state, action) {
