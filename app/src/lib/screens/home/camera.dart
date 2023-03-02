@@ -1,22 +1,28 @@
+import 'package:art_app_fyp/detection/classifier.dart';
+import 'package:art_app_fyp/detection/prediction.dart';
+import 'package:art_app_fyp/shared/utilities.dart';
+import 'package:image/image.dart' as imglib;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/shared/validators.dart';
+import 'package:logger/logger.dart';
 
 // import 'package:tflite/tflite.dart';
 
 import 'dart:math' as math;
 
-typedef Callback = void Function(List<dynamic> list, int h, int w);
+import 'package:tflite_flutter/tflite_flutter.dart';
 
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
 class CameraView extends StatefulWidget {
   final List<CameraDescription> cameras;
   final int activeCameraIndex;
-  // final Callback setRecognitions;
+
+  /// Callback to pass results after inference to [HomeView]
+  // final Function(List<Prediction>) resultsCallback;
 
   // Default Constructor
-  // const CameraView(this.cameras, this.activeCameraIndex, this.setRecognitions);
   const CameraView(
       {Key? key, required this.cameras, required this.activeCameraIndex})
       : super(key: key);
@@ -25,45 +31,42 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => CameraViewState();
 }
 
+String DEFAULT_MODEL = 'assets/ssd_mobilenet.tflite';
+String DEFAULT_LABELS = 'assets/labels.txt';
+
 class CameraViewState extends State<CameraView> {
   late CameraController controller;
-  bool isDetecting = false;
+  bool isPredicting = false;
+  Logger logger = Logger();
+  Classifier classifier =
+      Classifier(labels: DEFAULT_LABELS, model: DEFAULT_MODEL);
 
   @override
   void initState() {
     super.initState();
     controller = CameraController(
         widget.cameras[widget.activeCameraIndex], ResolutionPreset.max);
-    controller.initialize().then((_) {
+    controller.initialize().then((_) async {
       if (!mounted) {
         return;
       }
 
       setState(() {});
 
-      controller.startImageStream((CameraImage img) async {
-        // if (!isDetecting) {
-        //   isDetecting = true;
-        //   await Tflite.detectObjectOnFrame(
-        //     bytesList: img.planes.map((plane) {
-        //       return plane.bytes;
-        //     }).toList(),
-        //     model: "SSDMobileNet",
-        //     imageHeight: img.height,
-        //     imageWidth: img.width,
-        //     imageMean: 127.5,
-        //     imageStd: 127.5,
-        //     numResultsPerClass: 3,
-        //     threshold: 0.4,
-        //   ).then((recognitions) {
-        //     /*
-        //       When setRecognitions is called here, the parameters are being passed on to the parent widget as callback. i.e. to the LiveFeed class
-        //        */
-        //     widget.setRecognitions(
-        //         recognitions as List<dynamic>, img.height, img.width);
-        //     isDetecting = false;
-        //   });
-        // }
+      await controller.startImageStream((CameraImage cameraImage) {
+        if (isPredicting || classifier.interpreter == null) {
+          if (classifier.interpreter == null) {
+            logger.w('Classifier Interpreter is null');
+          }
+          return;
+        }
+
+        imglib.Image img = Utilities.convertToYUV420(cameraImage);
+        List<Prediction>? results = classifier.predictItem(img);
+
+        logger.i('hello $results');
+
+        isPredicting = false;
       });
     }).catchError((Object e) {
       if (e is CameraException) {
