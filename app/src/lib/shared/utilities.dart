@@ -33,7 +33,7 @@ class Utilities {
   // Standard image convertion, borrowed from: https://gist.github.com/Alby-o/fe87e35bc21d534c8220aed7df028e03
   // CameraImage YUV420_888 -> PNG -> Image (compresion:0, filter: none)
   // Black
-  static imglib.Image convertToYUV420(CameraImage image) {
+  static imglib.Image convertYUV420ToImage(CameraImage image) {
     var img = imglib.Image(image.width, image.height); // Create Image buffer
 
     Plane plane = image.planes[0];

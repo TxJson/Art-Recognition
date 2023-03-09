@@ -68,6 +68,7 @@ flutter:
 
   # My Assets
   assets:
+    - assets/
     - assets/labels.txt
     - assets/ssd_mobilenet.tflite
 

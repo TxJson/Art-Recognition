@@ -1,11 +1,16 @@
+import 'dart:isolate';
+
 import 'package:art_app_fyp/detection/classifier.dart';
 import 'package:art_app_fyp/detection/prediction.dart';
+import 'package:art_app_fyp/shared/isolate/isolate_inference.dart';
+import 'package:art_app_fyp/shared/isolate/isolate_model.dart';
 import 'package:art_app_fyp/shared/utilities.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/shared/validators.dart';
 import 'package:logger/logger.dart';
+import 'dart:typed_data';
 
 // import 'package:tflite/tflite.dart';
 
@@ -36,50 +41,103 @@ String DEFAULT_LABELS = 'assets/labels.txt';
 
 class CameraViewState extends State<CameraView> {
   late CameraController controller;
+  late IsolateInference isolator;
+  late Classifier classifier;
+  late Logger logger;
+
   bool isPredicting = false;
-  Logger logger = Logger();
-  Classifier classifier =
-      Classifier(labels: DEFAULT_LABELS, model: DEFAULT_MODEL);
 
   @override
   void initState() {
     super.initState();
+    initDefaults();
+    initCamera();
+  }
+
+  void initDefaults() async {
+    classifier = Classifier(labels: DEFAULT_LABELS, model: DEFAULT_MODEL);
+    logger = Logger();
+
+    isolator = IsolateInference();
+    await isolator.start();
+  }
+
+  void initCamera() {
     controller = CameraController(
-        widget.cameras[widget.activeCameraIndex], ResolutionPreset.max);
+        widget.cameras[widget.activeCameraIndex], ResolutionPreset.low);
     controller.initialize().then((_) async {
       if (!mounted) {
         return;
       }
 
-      setState(() {});
-
-      await controller.startImageStream((CameraImage cameraImage) {
-        if (isPredicting || classifier.interpreter == null) {
-          if (classifier.interpreter == null) {
-            logger.w('Classifier Interpreter is null');
-          }
-          return;
-        }
-
-        imglib.Image img = Utilities.convertToYUV420(cameraImage);
-        List<Prediction>? results = classifier.predictItem(img);
-
-        logger.i('hello $results');
-
-        isPredicting = false;
-      });
+      await controller.startImageStream(cameraStream);
     }).catchError((Object e) {
       if (e is CameraException) {
         switch (e.code) {
           case 'CameraAccessDenied':
-            // Handle access errors here.
+            logger.w('ERROR when accessing the camera ${e.description}');
             break;
           default:
-            // Handle other errors here.
+            logger.w('ERROR occured ${e.description}');
             break;
         }
+        throw Exception(e.description);
       }
     });
+  }
+
+  void cameraStream(CameraImage cameraImage) async {
+    // if (isPredicting || classifier.interpreter == null) {
+    //   if (classifier.interpreter == null) {
+    //     logger.w('Classifier Interpreter is null');
+    //   }
+    //   return;
+    // }
+
+    // isPredicting = true;
+
+    // imglib.Image image = Utilities.convertYUV420ToImage(cameraImage);
+    // classifier.predictItem(image);
+
+    // // logger.i(results);
+
+    // // logger.i('hello $results');
+
+    // isPredicting = false;
+
+    if (!isInitialized()) {
+      return;
+    }
+
+    setState(() {
+      isPredicting = true;
+    });
+
+    dynamic results = await predictIsolate(cameraImage);
+
+    setState(() {
+      isPredicting = false;
+    });
+  }
+
+  bool isInitialized() {
+    return !classifier.interDefined ||
+        isPredicting ||
+        isolator.sendPortInitialized;
+  }
+
+  Future<dynamic> predictIsolate(CameraImage cameraImage) async {
+    IsolateModel isolateModel = IsolateModel(
+        interpreterAddress: classifier.interAddress,
+        cameraImage: cameraImage,
+        labels: classifier.listOfLabels);
+
+    // Start isolator
+    ReceivePort responsePort = ReceivePort();
+    isolator.sendPort.send(isolateModel..responsePort = responsePort.sendPort);
+
+    dynamic response = await responsePort.first;
+    return response;
   }
 
   @override
@@ -93,24 +151,6 @@ class CameraViewState extends State<CameraView> {
     if (!controller.value.isInitialized) {
       return Container();
     }
-
-    // var tmp = MediaQuery.of(context).size;
-    // var screenH = math.max(tmp.height, tmp.width);
-    // var screenW = math.min(tmp.height, tmp.width);
-
-    // tmp = controller.value.previewSize as Size;
-    // var previewH = math.max(tmp.height, tmp.width);
-    // var previewW = math.min(tmp.height, tmp.width);
-    // var screenRatio = screenH / screenW;
-    // var previewRatio = previewH / previewW;
-
-    // return OverflowBox(
-    //   maxHeight:
-    //       screenRatio > previewRatio ? screenH : screenW / previewW * previewH,
-    //   maxWidth:
-    //       screenRatio > previewRatio ? screenH / previewH * previewW : screenW,
-    //   child: CameraPreview(controller),
-    // );
 
     return MaterialApp(
         home: GestureDetector(
