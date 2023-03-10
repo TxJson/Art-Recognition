@@ -2,8 +2,11 @@ import 'dart:isolate';
 
 import 'package:art_app_fyp/classification/classifier.dart';
 import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/widgets/loader.dart';
 import 'package:art_app_fyp/shared/isolate/isolate_inference.dart';
 import 'package:art_app_fyp/shared/isolate/isolate_model.dart';
+import 'package:art_app_fyp/shared/utilities.dart';
+import 'package:art_app_fyp/store/actions.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -16,32 +19,37 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
 class CameraView extends StatefulWidget {
-  final List<CameraDescription> cameras;
   final int activeCameraIndex;
+  final bool detectionActive;
 
   /// Callback to pass results after inference to [HomeView]
-  // final Function(List<Prediction>) resultsCallback;
+  final Function(List<Prediction>) resultsCallback;
+  final Function(List<CameraDescription>) setCameras;
 
   // Default Constructor
   const CameraView(
-      {Key? key, required this.cameras, required this.activeCameraIndex})
+      {Key? key,
+      required this.activeCameraIndex,
+      required this.resultsCallback,
+      required this.setCameras,
+      this.detectionActive = false})
       : super(key: key);
 
   @override
   State<CameraView> createState() => CameraViewState();
 }
 
-// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/ssd_mobilenet.tflite';
-// String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
-String DEFAULT_MODEL = 'assets/yolov5_license_plates/yolov5n-fp16.tflite';
-String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
+String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/ssd_mobilenet.tflite';
+String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
+// String DEFAULT_MODEL = 'assets/yolov5_license_plates/yolov5n-fp16.tflite';
+// String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
 
 class CameraViewState extends State<CameraView> {
-  late CameraController controller;
   late IsolateInference isolator;
   late Classifier classifier;
   late Logger logger;
-  late List<Prediction> predictions;
+
+  CameraController? controller;
 
   bool isPredicting = false;
   bool irregularOutput = false;
@@ -49,8 +57,8 @@ class CameraViewState extends State<CameraView> {
   @override
   void initState() {
     super.initState();
-    initDefaults();
     initCamera();
+    initDefaults();
   }
 
   void initDefaults() async {
@@ -61,52 +69,68 @@ class CameraViewState extends State<CameraView> {
     await isolator.start();
   }
 
-  void initCamera() {
-    controller = CameraController(
-        widget.cameras[widget.activeCameraIndex], ResolutionPreset.low);
-    controller.initialize().then((_) async {
-      if (!mounted) {
-        return;
-      }
+  // Only call setState, if the component is mounted
+  // Setting state when component is not active causes exceptions
+  // this mitigate those exceptions
+  void setStateIfMounted(void Function() func) {
+    if (mounted) {
+      setState(func);
+    }
+  }
 
-      await controller.startImageStream(cameraStream);
-    }).catchError((Object e) {
-      if (e is CameraException) {
-        switch (e.code) {
-          case 'CameraAccessDenied':
-            logger.w('ERROR when accessing the camera ${e.description}');
-            break;
-          default:
-            logger.w('ERROR occured ${e.description}');
-            break;
+  void initCamera() async {
+    final List<CameraDescription> cameras = await availableCameras();
+    widget.setCameras(cameras);
+    controller = CameraController(
+        cameras[widget.activeCameraIndex], ResolutionPreset.low,
+        enableAudio: false);
+    if (controller != null) {
+      controller!.initialize().then((_) async {
+        if (!mounted) {
+          return;
         }
-        throw Exception(e.description);
-      }
-    });
+        await controller!.startImageStream(cameraStream);
+      }).catchError((Object e) {
+        if (e is CameraException) {
+          switch (e.code) {
+            case 'CameraAccessDenied':
+              logger.w('ERROR when accessing the camera ${e.description}');
+              break;
+            default:
+              logger.w('ERROR occured ${e.description}');
+              break;
+          }
+          throw Exception(e.description);
+        }
+      });
+    }
   }
 
   void cameraStream(CameraImage cameraImage) async {
-    if (isPredicting || !isInitialized()) {
+    if (isPredicting ||
+        !isInitialized() ||
+        !mounted ||
+        !widget.detectionActive) {
       return;
     }
 
-    setState(() {
+    setStateIfMounted(() {
       isPredicting = true;
     });
 
-    Map<String, dynamic> response = await predictIsolate(cameraImage);
-    List<Prediction>? predictionResponse = handleResponse(response);
+    if (isPredicting) {
+      Map<String, dynamic>? response = await predictIsolate(cameraImage);
+      List<Prediction>? predictionResponse = handleResponse(response);
 
-    setState(() {
       if (predictionResponse == null) {
         // If response is suddenly null, set predictions to an empty list
-        predictions = [];
+        widget.resultsCallback([]);
       } else {
-        predictions = predictionResponse;
+        widget.resultsCallback(predictionResponse);
       }
-    });
+    }
 
-    setState(() {
+    setStateIfMounted(() {
       isPredicting = false;
     });
   }
@@ -145,15 +169,38 @@ class CameraViewState extends State<CameraView> {
 
   @override
   void dispose() {
-    controller.dispose();
+    controller!.dispose();
     classifier.close();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (controller == null) {
+      return;
+    }
+    switch (state) {
+      case AppLifecycleState.paused:
+        controller!.stopImageStream();
+
+        break;
+      case AppLifecycleState.resumed:
+        if (!controller!.value.isStreamingImages) {
+          await controller!.startImageStream(cameraStream);
+        }
+        break;
+      default:
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!controller.value.isInitialized) {
-      return Container();
+    if (controller == null || !controller!.value.isInitialized || !mounted) {
+      // Use Maroon colour
+      return Loader(
+          milliseconds: 50,
+          color: Utilities.getHexColor("#800000"),
+          message: 'Loading Camera');
     }
 
     return MaterialApp(
@@ -163,18 +210,18 @@ class CameraViewState extends State<CameraView> {
             /// https://stackoverflow.com/questions/60424964/zoom-camera-in-flutter#:~:text=You%20can%20use%20cameraController.,limits%20for%20the%20zoom%20level.
             /// TODO: Known bug - When zooming in it always starts from 0
             onScaleUpdate: (details) async {
-              double max = await controller.getMaxZoomLevel();
-              double min = await controller.getMinZoomLevel();
+              double max = await controller!.getMaxZoomLevel();
+              double min = await controller!.getMinZoomLevel();
 
               double dragIntensity = details.scale;
               if (dragIntensity < min) {
-                controller.setZoomLevel(min);
+                controller!.setZoomLevel(min);
               } else if (dragIntensity.between(min, max)) {
-                controller.setZoomLevel(dragIntensity);
+                controller!.setZoomLevel(dragIntensity);
               } else if (dragIntensity > max) {
-                controller.setZoomLevel(max);
+                controller!.setZoomLevel(max);
               }
             },
-            child: CameraPreview(controller)));
+            child: CameraPreview(controller!)));
   }
 }

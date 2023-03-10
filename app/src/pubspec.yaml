@@ -71,6 +71,8 @@ flutter:
     - assets/
     - assets/yolov5_license_plates/yolov5n-fp16.tflite
     - assets/yolov5_license_plates/labels.txt
+    - assets/default_ssd_mobilenet/ssd_mobilenet.tflite
+    - assets/default_ssd_mobilenet/labels.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:

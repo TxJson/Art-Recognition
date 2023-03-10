@@ -1,9 +1,13 @@
+import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/screens/home/footer_buttons.dart';
+import 'package:art_app_fyp/shared/utilities.dart';
 import 'package:art_app_fyp/shared/widgets/debug.dart';
 import 'package:art_app_fyp/screens/home/camera.dart';
+import 'package:art_app_fyp/store/actions.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/store/appstate.dart';
 import 'package:flutter_redux/flutter_redux.dart';
-// import 'package:tflite/tflite.dart';
 
 class MyHome extends StatelessWidget {
   const MyHome({Key? key}) : super(key: key);
@@ -24,17 +28,38 @@ class MyHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: const BoxDecoration(color: Colors.green),
-        child: StoreConnector<AppState, AppState>(
-            converter: (store) => store.state,
-            builder: (context, state) {
+        child: StoreConnector<AppState, dynamic>(
+            converter: (store) => store,
+            builder: (context, store) {
               return Scaffold(
+                  backgroundColor: Colors.black,
 
                   /// Set camera view from StoreConnector
-                  body: Center(
-                    child: CameraView(
-                        cameras: state.cameras,
-                        activeCameraIndex: state.activeCameraIndex),
-                  ),
+                  body: CameraView(
+                      detectionActive: store.state.detectionState,
+                      activeCameraIndex: store.state.activeCameraIndex,
+                      resultsCallback: (List<Prediction> predictions) {
+                        store.dispatch(SetPredictions(predictions));
+                      },
+                      setCameras: (List<CameraDescription> cameras) {
+                        store.dispatch(cameras);
+                      }),
+                  persistentFooterButtons: <Widget>[
+                    FooterButtons(
+                        icon: const Icon(Icons.adb),
+                        text: 'Toggle Debug',
+                        backgroundColor: !store.state.debugState
+                            ? Colors.green
+                            : Utilities.getHexColor("#800000"),
+                        onPressed: () => store.dispatch(toggleDebugState())),
+                    FooterButtons(
+                        icon: const Icon(Icons.center_focus_strong),
+                        text: 'Toggle Detection',
+                        backgroundColor: !store.state.detectionState
+                            ? Colors.green
+                            : Utilities.getHexColor("#800000"),
+                        onPressed: () => store.dispatch(toggleDetection()))
+                  ],
 
                   /// Set button icon for detecting artwork
                   // floatingActionButton: SizedBox(
@@ -79,15 +104,19 @@ class MyHome extends StatelessWidget {
                   //     FloatingActionButtonLocation.centerFloat,
 
                   /// Debug functionality
-
                   bottomSheet: MyDebug(
-                      debugState: state.debugState,
+                      debugState: store.state.debugState,
                       spacing: 20,
                       children: <Widget>[
                         // Text(
                         //     'Detection Status: ${state.detectionState ? 'On' : 'Off'}'),
-                        Text('Total Cameras: ${state.cameras.length}'),
-                        Text('Active Camera Index: ${state.activeCameraIndex}')
+                        Text(
+                            'Total Cameras: ${store.state.cameras?.length ?? "null"}'),
+                        Text(
+                            'Active Camera Index: ${store.state.activeCameraIndex}'),
+                        Text(
+                            'Detections: ${store.state.predictions?.length ?? "null"}'),
+                        Text('Detection Active: ${store.state.detectionState}')
                       ]));
             }));
   }
