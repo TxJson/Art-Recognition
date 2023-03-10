@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+enum PredictionStatus { ok, warning, error }
+
 class Prediction {
   int id;
   String label;
