@@ -14,14 +14,15 @@ def start_subprocess(*args):
 # https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data
 def train(module, moduleConfig):
     # yolov5.train()
+    # settings = f.getJson("./settings/settings.json")
+    # exports_path = settings.get("exports_path")
+
+
     data = f.getJson(moduleConfig)
     settings = f.getJson("./settings/settings.json")
-    accepted_frameworks = settings.get("accepted_frameworks")
-    exports_path = settings.get("exports_path")
-
     module_settings = data.get("settings")
     training_settings = module_settings.get("training")
-    export_settings = module_settings.get("export")
+    accepted_frameworks = settings.get("accepted_frameworks")
     args = ""
 
     if not training_settings:

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:art_app_fyp/classification/prediction.dart';
 import 'package:art_app_fyp/shared/utilities.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -17,14 +18,16 @@ class Classifier {
   final dynamic labels; // Pass asset path, ex assets/labels.txt
 
   final int threads;
-  final double threshold;
+  double threshold;
+
+  // Some datasets return outputs between 0-100 instead of 0-1
 
   Interpreter? interpreter;
 
   Classifier(
       {required this.labels,
       this.model = '',
-      this.threshold = 0.5,
+      this.threshold = 0.5, // Threshold between 0 - 1
       this.threads = 4,
       this.interpreter}) {
     // Model is optional in case
@@ -33,6 +36,12 @@ class Classifier {
     } else if (labels is List) {
       labelList = labels;
     }
+
+    // // Most outputs will return a value between 0-1
+    // // But some are irregular, their output will be between 0-100
+    // if (irregularOutput) {
+    //   threshold *= 100;
+    // }
   }
 
   // Will be initialized & loaded with loadLabels/loadModel
@@ -83,107 +92,29 @@ class Classifier {
     // Still want to allow it to be passed for clarity
     model = Utilities.removeIfExists(model, 'assets/');
 
-    interpreter = await Interpreter.fromAsset(model).catchError((Object e) {
+    interpreter = await Interpreter.fromAsset(model,
+            options: InterpreterOptions()..threads = 4)
+        .catchError((Object e) {
       logger.e('An error occured while loading the model:', e);
     });
   }
 
-  // Future<imglib.Image?> preprocessImage(image) async {
-  //   Uint32List imgBytes = await image.readAsBytes();
-  //   // return ui.decodeImage(imgBytes)!;
-  //   return imglib.decodeImage(imgBytes);
-  // }
+  void logInfo(TensorImage inputImage) {
+    logger.i('Label Count: ${labelList.length}');
 
-  List<double> getOutputRatio(imglib.Image img, int inputSize) {
-    return [
-      img.width.toDouble() / inputSize,
-      img.height.toDouble() / inputSize
-    ];
+    logger.i(
+      'Output shape: ${interpreter!.getOutputTensor(0).shape}, '
+      'type: ${interpreter!.getOutputTensor(0).type}',
+    );
+
+    logger.i('Input shape ${interpreter!.getInputTensor(0).shape}, '
+        'type: ${interpreter!.getInputTensor(0).type}, '
+        'length: ${interpreter!.getInputTensor(0).shape.length}');
+
+    logger.i('Pre-processed image: ${inputImage.width}x${inputImage.height}, '
+        'size: ${inputImage.buffer.lengthInBytes} bytes, '
+        'type: ${inputImage.dataType}');
   }
-
-  // Adapted from https://pub.dev/documentation/mlkit/latest/
-  // Uint8List imageToByteList(imglib.Image image, int inputSize) {
-  //   var convertedBytes = Uint8List(1 * inputSize * inputSize * 3);
-  //   var buffer = ByteData.view(convertedBytes.buffer);
-  //   int pixelIndex = 0;
-  //   for (var i = 0; i < inputSize; i++) {
-  //     for (var j = 0; j < inputSize; j++) {
-  //       var pixel = image.getPixel(i, j);
-  //       buffer.setUint8(pixelIndex, (pixel >> 16) & 0xFF);
-  //       pixelIndex++;
-  //       buffer.setUint8(pixelIndex, (pixel >> 8) & 0xFF);
-  //       pixelIndex++;
-  //       buffer.setUint8(pixelIndex, (pixel) & 0xFF);
-  //       pixelIndex++;
-  //     }
-  //   }
-  //   return convertedBytes;
-  // }
-
-  TensorImage preprocessInput(imglib.Image image) {
-    // TensorImage tImage = TensorImage.fromImage(image);
-    // // int targetPad = max(tImage.height, tImage.width);
-    // int targetPad = max(image.height, image.width);
-    // imageProcessor = ImageProcessorBuilder()
-    //     .add(ResizeWithCropOrPadOp(targetPad, targetPad))
-    //     .add(ResizeOp(1, 640, ResizeMethod.BILINEAR))
-    //     .build();
-    // return imageProcessor.process(tImage);
-
-    final inputTensor = TensorImage.fromImage(image);
-
-    final minLength = min(inputTensor.height, inputTensor.width);
-
-    final shapeLength = interpreter!.getInputTensor(0).shape[1];
-
-    final imageProcessor = ImageProcessorBuilder()
-        .add(ResizeWithCropOrPadOp(minLength, minLength))
-        .add(ResizeOp(shapeLength, shapeLength, ResizeMethod.BILINEAR))
-        .build();
-
-    imageProcessor.process(inputTensor);
-    return inputTensor;
-  }
-
-  // https://pub.dev/packages/tflite_flutter_helper
-  dynamic predictItem(imglib.Image image) {
-    if (interpreter == null || interpreter!.isDeleted) {
-      logger.e('Interpreter is null or deleted');
-      return null;
-    }
-
-    TensorImage inputImage = preprocessInput(image);
-    TensorBuffer output = TensorBuffer.createFixedSize(
-        interpreter!.getOutputTensor(0).shape,
-        interpreter!.getOutputTensor(0).type);
-
-    // logger.i('Label Count: ${labelList.length}');
-
-    // logger.i(
-    //   'Output shape: ${interpreter!.getOutputTensor(0).shape}, '
-    //   'type: ${interpreter!.getOutputTensor(0).type}',
-    // );
-
-    // logger.i('Input shape ${interpreter!.getInputTensor(0).shape}, '
-    //     'type: ${interpreter!.getInputTensor(0).type}, '
-    //     'length: ${interpreter!.getInputTensor(0).shape.length}');
-
-    // logger.i('Pre-processed image: ${inputImage.width}x${inputImage.height}, '
-    //     'size: ${inputImage.buffer.lengthInBytes} bytes, '
-    //     'type: ${inputImage.dataType}');
-
-    interpreter!.run(inputImage.tensorBuffer.buffer, output.buffer);
-
-    return output.getDoubleList();
-  }
-
-  void close() {
-    interpreter!.close();
-  }
-
-  int get interAddress => interpreter!.address;
-  bool get interDefined => interpreter != null;
-  bool get interAllocated => interpreter!.isAllocated;
 
   /// @reallocate Set true to reallocate interpreter tensors
   ///
@@ -201,5 +132,85 @@ class Classifier {
     interpreter!.allocateTensors();
   }
 
+  TensorImage preprocessInput(imglib.Image image) {
+    final inputTensor = TensorImage.fromImage(image);
+
+    final minLength = min(inputTensor.height, inputTensor.width);
+    final shapeLength = interpreter!.getInputTensor(0).shape[1];
+    final quantOps = interpreter!.getInputTensor(0).params;
+
+    final imageProcessor = ImageProcessorBuilder()
+        .add(ResizeWithCropOrPadOp(minLength, minLength))
+        .add(ResizeOp(shapeLength, shapeLength, ResizeMethod.BILINEAR))
+        // .add(NormalizeOp(127.5, 127.5))
+        // .add(QuantizeOp(quantOps.zeroPoint.toDouble(), quantOps.scale))
+        .build();
+
+    imageProcessor.process(inputTensor);
+    return inputTensor;
+  }
+
+  List<Prediction> processOutput(TensorBuffer output) {
+    // final outputs = 1 / (1 + exp(-output))
+    final predictionProcessor = TensorProcessorBuilder().build();
+    final processedOutput = predictionProcessor.process(output);
+
+    // Create label map
+    TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
+    List<Category> processedLabels = tensorLabels.getCategoryList();
+
+    // Find predictions within threshold
+    List<Prediction> predictions = [];
+    Category cat;
+    double probability;
+    for (int i = 0; i < processedLabels.length; i++) {
+      cat = processedLabels.elementAt(i);
+
+      // Score not quantized so split by 255.0
+      probability = cat.score / 255.0;
+
+      if (probability > 0.5) {
+        predictions.add(Prediction(i, cat.label, probability));
+      }
+    }
+
+    return predictions;
+  }
+
+  // https://pub.dev/packages/tflite_flutter_helper
+  Map<String, dynamic> predictItem(imglib.Image image,
+      {bool logEnabled = false}) {
+    if (interpreter == null || interpreter!.isDeleted) {
+      return {
+        "status": PredictionStatus.error,
+        "message": "Interpreter is null or deleted"
+      };
+    }
+
+    TensorImage inputImage = preprocessInput(image);
+    TensorBuffer output = TensorBuffer.createFixedSize(
+        interpreter!.getOutputTensor(0).shape,
+        interpreter!.getOutputTensor(0).type);
+
+    if (logEnabled) {
+      logInfo(inputImage);
+    }
+
+    interpreter!.run(inputImage.tensorBuffer.buffer, output.buffer);
+
+    List<Prediction> predictions = processOutput(output);
+    return {
+      "status": PredictionStatus.ok,
+      "result": predictions,
+    };
+  }
+
+  void close() {
+    interpreter!.close();
+  }
+
+  int get interAddress => interpreter!.address;
+  bool get interpreterDefined => interpreter != null;
+  bool get interAllocated => interpreter!.isAllocated;
   List<String> get listOfLabels => labelList;
 }

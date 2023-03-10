@@ -63,6 +63,7 @@ def create_dataset_yaml(path, framework, datasets, dataset_config):
     yaml = ruamel.yaml.YAML()
     yaml.preserve_quotes = True
 
+    names = [];
     for dataset in datasets:
         defaultDatasetPath = rf"{DATASETS}/{dataset}"
         yamlFile = dataset_config.get(rf"{dataset}").get("datafile")
@@ -77,10 +78,16 @@ def create_dataset_yaml(path, framework, datasets, dataset_config):
         if not data["val"] == validPath:
             data["val"] = validPath
         
+        _names = data['names']
+        if _names:
+            names.extend(_names)
+
         newDatafile = rf"{path}/datasets/{dataset}.yaml"
         f.writeToFile(newDatafile, content="", newFile=True) # Create empty file
         with open(newDatafile, "w") as _file:
             yaml.dump(data, _file)
+
+    f.writeToFile(rf"{path}/labels.txt", "\n".join(names), True)
 
 
 
