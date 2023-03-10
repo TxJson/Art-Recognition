@@ -150,7 +150,8 @@ class Classifier {
     return inputTensor;
   }
 
-  List<Prediction> processOutput(TensorBuffer output) {
+  List<Prediction> processOutput(
+      TensorBuffer output, int inputSize, imglib.Image image) {
     // final outputs = 1 / (1 + exp(-output))
     final predictionProcessor = TensorProcessorBuilder().build();
     final processedOutput = predictionProcessor.process(output);
@@ -158,6 +159,16 @@ class Classifier {
     // Create label map
     TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
     List<Category> processedLabels = tensorLabels.getCategoryList();
+
+    List<Rect> boundingBoxes = BoundingBoxUtils.convert(
+      tensor: output,
+      valueIndex: [1, 0, 3, 2],
+      boundingBoxAxis: -2,
+      boundingBoxType: BoundingBoxType.BOUNDARIES,
+      coordinateType: CoordinateType.RATIO,
+      height: inputSize,
+      width: inputSize,
+    );
 
     // Find predictions within threshold
     List<Prediction> predictions = [];
@@ -168,9 +179,10 @@ class Classifier {
 
       // Score not quantized so split by 255.0
       probability = cat.score / 255.0;
-
       if (probability > 0.5) {
-        predictions.add(Prediction(i, cat.label, probability));
+        Rect rectBoundary = imageProcessor.inverseTransformRect(
+            boundingBoxes[i], image.height, image.width);
+        predictions.add(Prediction(i, cat.label, probability, rectBoundary));
       }
     }
 
@@ -198,7 +210,8 @@ class Classifier {
 
     interpreter!.run(inputImage.tensorBuffer.buffer, output.buffer);
 
-    List<Prediction> predictions = processOutput(output);
+    List<Prediction> predictions =
+        processOutput(output, inputImage.height, image);
     return {
       "status": PredictionStatus.ok,
       "result": predictions,

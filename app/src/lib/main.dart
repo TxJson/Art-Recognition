@@ -13,13 +13,11 @@ void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); //Ensure plugin services are initialized
 
-  final List<CameraDescription> cameras = await availableCameras();
-
   var logger = Logger();
   logger.d("Logger is working!");
 
   Store<AppState> store = Store<AppState>(appReducer,
-      initialState: AppState(cameras: cameras, debugState: true),
+      initialState: const AppState(debugState: true, detectionState: true),
       middleware: [thunkMiddleware]);
 
   runApp(StoreProvider<AppState>(

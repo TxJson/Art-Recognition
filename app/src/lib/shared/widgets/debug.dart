@@ -21,9 +21,18 @@ class MyDebug extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    List<Widget> _children = [];
+    for (int i = 0; i < children.length; i++) {
+      if (i > 0) {
+        _children.add(Text('■'));
+      }
+
+      _children.add(children[i]);
+    }
+
     return StoreConnector<AppState, AppState>(
         converter: (store) => store.state,
         builder: (context, state) =>
-            Wrap(spacing: spacing, children: children));
+            Wrap(spacing: spacing, children: _children));
   }
 }
