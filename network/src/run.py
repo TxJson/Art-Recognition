@@ -8,8 +8,8 @@ from setup import setup, force_setup
 REQUIREMENTS=["./datasets", "./modules"]
 MODULE_CONFIG = rf"settings/modules.json"
 
-def run(module=""):    
-    train(module, rf"./modules/{module}/module.json")
+def run(module="", export=False):    
+    train(module, rf"./modules/{module}/module.json", export)
 
 
 def run_setup(force=False):
@@ -38,6 +38,10 @@ def set_parser():
                     choices=modules,
                     dest="module",
                     help=rf"Select your dataset from the list of {', '.join(modules)}")
+    # Export Argument
+    parser.add_argument("-e", "--export", help="Export model", dest="export", action="store_true")
+
+    
     return parser
 
 def cli(parser):
@@ -45,12 +49,15 @@ def cli(parser):
         results = parser().parse_args()
         
         if results.run_setup or results.force_run_setup:
+            print("\nRunning Setup")
             run_setup(results.force_run_setup)
+            print("\nSetup Finished")
+            return
 
         if results.module != None:
             if results.gpu_check:
                 gpu_recognition()
-            run(results.module)
+            run(results.module, results.export)
             return
 
         if results.gpu_check:

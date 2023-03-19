@@ -62,7 +62,7 @@ setup_modules()
     # Need to run from correct dir to ensure that generated files are in correct place
     cd $SRCDIR
 
-    py run.py -sr
+    python3 run.py -sr
 
     cd $BASEDIR
 }
