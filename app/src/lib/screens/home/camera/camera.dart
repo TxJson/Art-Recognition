@@ -2,19 +2,16 @@ import 'dart:isolate';
 
 import 'package:art_app_fyp/classification/classifier.dart';
 import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/screens/home/camera/cameraInfo.dart';
 import 'package:art_app_fyp/shared/widgets/loader.dart';
-import 'package:art_app_fyp/shared/isolate/isolate_inference.dart';
-import 'package:art_app_fyp/shared/isolate/isolate_model.dart';
-import 'package:art_app_fyp/shared/utilities.dart';
-import 'package:art_app_fyp/store/actions.dart';
+import 'package:art_app_fyp/shared/isolate_inference/isolate_inference.dart';
+import 'package:art_app_fyp/shared/isolate_inference/isolate_model.dart';
+import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:art_app_fyp/shared/validators.dart';
+import 'package:art_app_fyp/shared/helpers/validators.dart';
 import 'package:logger/logger.dart';
-import 'dart:typed_data';
-
-import 'package:tflite_flutter/tflite_flutter.dart';
 
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
@@ -39,14 +36,17 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => CameraViewState();
 }
 
-String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/ssd_mobilenet.tflite';
-String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
+// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/ssd_mobilenet.tflite';
+// String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
 // String DEFAULT_MODEL = 'assets/yolov5_license_plates/yolov5n-fp16.tflite';
 // String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
+String DEFAULT_MODEL = 'assets/template_model/detect.tflite';
+String DEFAULT_LABELS = 'assets/template_model/labels.txt';
 
 class CameraViewState extends State<CameraView> {
   late IsolateInference isolator;
   late Classifier classifier;
+  late CameraInfo cameraInfo;
   late Logger logger;
 
   CameraController? controller;
@@ -82,13 +82,21 @@ class CameraViewState extends State<CameraView> {
     final List<CameraDescription> cameras = await availableCameras();
     widget.setCameras(cameras);
     controller = CameraController(
-        cameras[widget.activeCameraIndex], ResolutionPreset.low,
+        cameras[widget.activeCameraIndex], ResolutionPreset.max,
         enableAudio: false);
     if (controller != null) {
       controller!.initialize().then((_) async {
         if (!mounted) {
           return;
         }
+
+        Size? previewSize = controller!.value.previewSize;
+        if (previewSize != null) {
+          cameraInfo = CameraInfo(previewSize, MediaQuery.of(context).size);
+        } else {
+          cameraInfo = CameraInfo();
+        }
+
         await controller!.startImageStream(cameraStream);
       }).catchError((Object e) {
         if (e is CameraException) {
@@ -157,6 +165,7 @@ class CameraViewState extends State<CameraView> {
         interpreterAddress: classifier.interAddress,
         cameraImage: cameraImage,
         labels: classifier.listOfLabels,
+        cameraInfo: cameraInfo,
         logEnabled: false);
 
     // Start isolator

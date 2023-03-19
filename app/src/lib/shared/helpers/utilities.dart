@@ -30,7 +30,8 @@ class Utilities {
     return str;
   }
 
-  // Standard image convertion, borrowed from: https://gist.github.com/Alby-o/fe87e35bc21d534c8220aed7df028e03
+  // Adapted from: https://gist.github.com/Alby-o/fe87e35bc21d534c8220aed7df028e03
+  // Standard image convertion
   // CameraImage YUV420_888 -> PNG -> Image (compresion:0, filter: none)
   // Black
   static imglib.Image convertYUV420ToImage(CameraImage image) {

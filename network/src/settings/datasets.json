@@ -22,5 +22,13 @@
         "home": "https://universe.roboflow.com/anpr-hqruj/anpr-ublyc",
         "datafile": "data.yaml",
         "expected_framework": "yolov5"
+    },
+    "art-recognition-detector": {
+        "path": "https://universe.roboflow.com/ds/QCd6RagZ8a?key=RoNhOY1SvW",
+        "zip": "art-recognition-detector",
+        "folder": "art-recognition-detector",
+        "home": "https://universe.roboflow.com/art-7fgu4/art-recognition-detector",
+        "datafile": "data.yaml",
+        "expected_framework": "yolov5"
     }
 }

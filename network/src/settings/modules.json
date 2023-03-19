@@ -16,7 +16,7 @@
             "anpr-license-plates"
         ]
     },
-    "art_detection": {
+    "art_frame_detection": {
         "framework": "yolov5",
         "settings": {
             "training": {
@@ -32,6 +32,17 @@
         "datasets": [
             "french-paintings-raya"
         ]
+    },
+    "art_style_detection": {
+        "framework": "yolov5",
+        "settings": {
+            "training": {
+                "weights":"yolov5n.pt",
+                "img": "416",
+                "epochs": 100,
+                "batch": 40
+            }            
+        }
     },
     "license_plate_detection": {
         "framework": "yolov5",
