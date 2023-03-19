@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash'
 
 SRCDIR="src"
 DEPDIR="$SRCDIR/dependencies"
@@ -6,6 +6,12 @@ DEPDIR="$SRCDIR/dependencies"
 SCRIPT_PATH="${BASH_SOURCE:-$0}"
 ABS_SCRIPT_PATH="$(realpath "${SCRIPT_PATH}")"
 BASEDIR="$(dirname "${ABS_SCRIPT_PATH}")"
+
+version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+min="3.7.0" # Minimum python version
+
+parsedVersion=$(echo "${version//./}")
+minParsed=$(echo "${min//./}")
 
 install_dependencies()
 {
@@ -70,7 +76,7 @@ setupForce()
         setup_modules        
     else
         echo "Invalid Python version"
-        echo "Expected minimum $min"
+        echo "Expected minimum $min, found $parsedVersion"
     fi
 }
 
@@ -111,12 +117,6 @@ clean()
     # Remove generated modules and datasets
     removeifexists $SRCDIR "datasets" "modules" "dependencies"
 }
-
-version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
-min="3.7.0" # Minimum python version
-
-parsedVersion=$(echo "${version//./}")
-minParsed=$(echo "${min//./}")
 
 cleanParam="c"
 setupParam="s"

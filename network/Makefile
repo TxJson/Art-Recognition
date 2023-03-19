@@ -34,6 +34,14 @@ install-f:
 	@echo "$(PURPLE)Running Setup with Force$(RESET)"
 	sh setup.sh -fs
 
+install-linux:
+	@echo "$(PURPLE)Running Setup Linux$(RESET)"
+	bash setup.sh -s
+
+install-linux-f:
+	@echo "$(PURPLE)Running Setup with Force$(RESET)"
+	bash setup.sh -fs
+
 clean:
 	@echo "$(YELLOW)Cleaning...$(RESET)"
 	sh setup.sh -c
