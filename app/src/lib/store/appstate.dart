@@ -1,5 +1,5 @@
 import 'package:art_app_fyp/classification/prediction.dart';
-import 'package:art_app_fyp/shared/validators.dart';
+import 'package:art_app_fyp/shared/helpers/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import './actions.dart';

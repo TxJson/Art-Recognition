@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/screens/home/main.dart';
-import 'package:art_app_fyp/shared/utilities.dart';
+import 'package:art_app_fyp/shared/helpers/utilities.dart';
 
 enum AppPages {
   home(0);

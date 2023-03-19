@@ -1,8 +1,9 @@
 import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/widgets/box.dart';
 import 'package:art_app_fyp/screens/home/footer_buttons.dart';
-import 'package:art_app_fyp/shared/utilities.dart';
+import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:art_app_fyp/shared/widgets/debug.dart';
-import 'package:art_app_fyp/screens/home/camera.dart';
+import 'package:art_app_fyp/screens/home/camera/camera.dart';
 import 'package:art_app_fyp/store/actions.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -35,15 +36,22 @@ class MyHome extends StatelessWidget {
                   backgroundColor: Colors.black,
 
                   /// Set camera view from StoreConnector
-                  body: CameraView(
-                      detectionActive: store.state.detectionState,
-                      activeCameraIndex: store.state.activeCameraIndex,
-                      resultsCallback: (List<Prediction> predictions) {
-                        store.dispatch(SetPredictions(predictions));
-                      },
-                      setCameras: (List<CameraDescription> cameras) {
-                        store.dispatch(cameras);
-                      }),
+                  body: Stack(children: <Widget>[
+                    CameraView(
+                        detectionActive: store.state.detectionState,
+                        activeCameraIndex: store.state.activeCameraIndex,
+                        resultsCallback: (List<Prediction> predictions) {
+                          store.dispatch(SetPredictions(predictions));
+                        },
+                        setCameras: (List<CameraDescription> cameras) {
+                          store.dispatch(cameras);
+                        }),
+                    // boundingBoxes(store.state.predictions),]
+
+                    Visibility(
+                        visible: store.state.detectionState,
+                        child: boundingBoxes(store.state.predictions)),
+                  ]),
                   persistentFooterButtons: <Widget>[
                     FooterButtons(
                         icon: const Icon(Icons.adb),
@@ -120,4 +128,18 @@ class MyHome extends StatelessWidget {
                       ]));
             }));
   }
+}
+
+Widget boundingBoxes(List<Prediction>? predictions) {
+  if (predictions == null) {
+    return Container();
+  }
+
+  return Stack(
+    children: predictions
+        .map((prediction) => BoxWidget(
+              prediction,
+            ))
+        .toList(),
+  );
 }

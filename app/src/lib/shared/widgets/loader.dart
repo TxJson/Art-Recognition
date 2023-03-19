@@ -1,4 +1,4 @@
-import 'package:art_app_fyp/shared/utilities.dart';
+import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:flutter/material.dart';
 
 // Modified from https://api.flutter.dev/flutter/material/CircularProgressIndicator-class.html
