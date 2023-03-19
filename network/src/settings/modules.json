@@ -41,8 +41,14 @@
                 "img": "416",
                 "epochs": 100,
                 "batch": 40
-            }            
-        }
+            },
+            "export": {
+                "format": "tflite"
+            }         
+        },
+        "datasets":[
+            "art-recognition-detector"
+        ]
     },
     "license_plate_detection": {
         "framework": "yolov5",

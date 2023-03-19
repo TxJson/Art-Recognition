@@ -63,7 +63,7 @@ def create_dataset_yaml(path, framework, datasets, dataset_config):
     yaml = ruamel.yaml.YAML()
     yaml.preserve_quotes = True
 
-    names = [];
+    names = []
     for dataset in datasets:
         defaultDatasetPath = rf"{DATASETS}/{dataset}"
         yamlFile = dataset_config.get(rf"{dataset}").get("datafile")
@@ -103,8 +103,17 @@ def create_modules():
         f.createPathIfNotExists(path)
 
         moduleStruct = rf"{path}/module.json"
-        f.writeToFile(moduleStruct, content=json.dumps(value), newFile=True)   
-        create_dataset_yaml(path, value.get("framework"), value.get("datasets"), dataset_config)
+        f.writeToFile(moduleStruct, content=json.dumps(value), newFile=True)  
+        fw = value.get("framework")
+        ds = value.get("datasets")
+        if fw and ds:
+            create_dataset_yaml(path, fw, ds, dataset_config)
+        else:
+            print("\nFramework or Datasets are missing, cannot create dataset yaml")
+            print(rf"Framework: {fw}")
+            print(rf"Datasets: {ds}")
+
+            raise Exception("Unable to create dataset yaml")
 
 def setup():
     get_datasets()
