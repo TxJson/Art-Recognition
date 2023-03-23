@@ -7,7 +7,7 @@ SCRIPT_PATH="${BASH_SOURCE:-$0}"
 ABS_SCRIPT_PATH="$(realpath "${SCRIPT_PATH}")"
 BASEDIR="$(dirname "${ABS_SCRIPT_PATH}")"
 
-version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
 min="3.7.0" # Minimum python version
 
 parsedVersion=$(echo "${version//./}")
@@ -62,7 +62,7 @@ setup_modules()
     # Need to run from correct dir to ensure that generated files are in correct place
     cd $SRCDIR
 
-    python3 run.py -sr
+    py run.py -sr
 
     cd $BASEDIR
 }

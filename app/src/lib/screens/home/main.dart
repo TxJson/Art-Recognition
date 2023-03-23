@@ -45,12 +45,17 @@ class MyHome extends StatelessWidget {
                         },
                         setCameras: (List<CameraDescription> cameras) {
                           store.dispatch(cameras);
+                        },
+                        stopPredictions: (bool stop) {
+                          if (stop) {
+                            store.dispatch(setDetectionDisabled());
+                          }
                         }),
                     // boundingBoxes(store.state.predictions),]
 
-                    Visibility(
-                        visible: store.state.detectionState,
-                        child: boundingBoxes(store.state.predictions)),
+                    // Visibility(
+                    //     visible: store.state.detectionState,
+                    //     child: boundingBoxes(store.state.predictions)),
                   ]),
                   persistentFooterButtons: <Widget>[
                     FooterButtons(
@@ -130,16 +135,16 @@ class MyHome extends StatelessWidget {
   }
 }
 
-Widget boundingBoxes(List<Prediction>? predictions) {
-  if (predictions == null) {
-    return Container();
-  }
+// Widget boundingBoxes(List<Prediction>? predictions) {
+//   if (predictions == null) {
+//     return Container();
+//   }
 
-  return Stack(
-    children: predictions
-        .map((prediction) => BoxWidget(
-              prediction,
-            ))
-        .toList(),
-  );
-}
+//   return Stack(
+//     children: predictions
+//         .map((prediction) => BoxWidget(
+//               prediction,
+//             ))
+//         .toList(),
+//   );
+// }

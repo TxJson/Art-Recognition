@@ -22,6 +22,7 @@ class CameraView extends StatefulWidget {
   /// Callback to pass results after inference to [HomeView]
   final Function(List<Prediction>) resultsCallback;
   final Function(List<CameraDescription>) setCameras;
+  final Function(bool stop) stopPredictions;
 
   // Default Constructor
   const CameraView(
@@ -29,6 +30,7 @@ class CameraView extends StatefulWidget {
       required this.activeCameraIndex,
       required this.resultsCallback,
       required this.setCameras,
+      required this.stopPredictions,
       this.detectionActive = false})
       : super(key: key);
 
@@ -36,12 +38,14 @@ class CameraView extends StatefulWidget {
   State<CameraView> createState() => CameraViewState();
 }
 
-// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/ssd_mobilenet.tflite';
+// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/detect.tflite';
 // String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
-// String DEFAULT_MODEL = 'assets/yolov5_license_plates/yolov5n-fp16.tflite';
+// String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
 // String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
-String DEFAULT_MODEL = 'assets/template_model/detect.tflite';
-String DEFAULT_LABELS = 'assets/template_model/labels.txt';
+// String DEFAULT_MODEL = 'assets/template_model/detect.tflite';
+// String DEFAULT_LABELS = 'assets/template_model/labels.txt';
+String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
+String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
 
 class CameraViewState extends State<CameraView> {
   late IsolateInference isolator;
@@ -150,6 +154,13 @@ class CameraViewState extends State<CameraView> {
       logger.w(response['message']);
     } else if (response['status'] == PredictionStatus.error) {
       logger.e(response['message']);
+    }
+
+    if (response['stop']) {
+      widget.stopPredictions(response['stop']);
+      setState(() {
+        isPredicting = false;
+      });
     }
 
     return null;

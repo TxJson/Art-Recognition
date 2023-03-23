@@ -12,7 +12,6 @@ def start_subprocess(*args):
     print(syscall) # Print syscall to show that it is being called in the log
     subprocess.run(syscall, shell=True)
 
-# https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data
 def train(module, moduleConfig, export=False):
     # yolov5.train()
     # settings = f.getJson("./settings/settings.json")
@@ -51,9 +50,9 @@ def train(module, moduleConfig, export=False):
     dependency_path = rf"./dependencies/{framework}/train.py"
     if accepted_frameworks:
         if f.pathExists(dependency_path) and framework in accepted_frameworks:
-            start_subprocess("python3", rf"{dependency_path}", " ".join(args), rf"--name {module}")
+            start_subprocess("py", rf"{dependency_path}", " ".join(args), rf"--name {module}")
             if export:
-                exp.convert_tflite(rf"{file_path}/dependencies/yolov5/runs/train/results/weights", module, "./hello")
+                exp.convert_tflite(rf"./dependencies/{framework}/runs/train", module, "./output")
     else:
         print("Unable to initialize accepted frameworks")
 
