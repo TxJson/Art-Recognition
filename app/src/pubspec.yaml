@@ -69,6 +69,8 @@ flutter:
   # My Assets
   assets:
     - assets/
+    - assets/yolov5n_art_style/detect.tflite
+    - assets/yolov5n_art_style/labels.txt
     - assets/yolov5_license_plates/detect.tflite
     - assets/yolov5_license_plates/labels.txt
     - assets/default_ssd_mobilenet/detect.tflite

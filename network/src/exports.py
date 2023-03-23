@@ -3,9 +3,10 @@ import lib.files as f
 
 def convert_tflite(model_dir, model_name, export_path):
     converter = tf.lite.TFLiteConverter.from_saved_model(model_dir)
-    tflite_model = converter.convert
+    tflite_model = converter.convert()
 
     f.createPathIfNotExists(export_path)
+
 
     if f.pathExists(export_path):
         file_count = len(f.getFiles(export_path, exactKey=[model_name]))

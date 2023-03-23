@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'dart:ui';
+import 'dart:typed_data';
 import 'package:art_app_fyp/classification/prediction.dart';
 import 'package:art_app_fyp/screens/home/camera/cameraInfo.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
@@ -20,8 +20,6 @@ class Classifier {
 
   final int threads;
   double threshold;
-
-  // Some datasets return outputs between 0-100 instead of 0-1
 
   Interpreter? interpreter;
 
@@ -54,7 +52,7 @@ class Classifier {
   List<int> outputTypes = [];
 
   // Used in image pre-processing
-  late ImageProcessor imageProcessor;
+  ImageProcessor? imageProcessor;
 
   void loadDefaults(String model, String labels) async {
     if (labels.isEmpty) {
@@ -94,10 +92,11 @@ class Classifier {
     // Still want to allow it to be passed for clarity
     model = Utilities.removeIfExists(model, 'assets/');
 
-    interpreter = await Interpreter.fromAsset(model,
-            options: InterpreterOptions()..threads = 4)
-        .catchError((Object e) {
-      logger.e('An error occured while loading the model:', e);
+    await Interpreter.fromAsset(model).then((Interpreter _interpreter) {
+      interpreter = _interpreter;
+      logger.i('Successfully loaded model');
+    }).catchError((Object e) {
+      logger.e('An error occured while loading the model', e);
     });
   }
 
@@ -135,107 +134,134 @@ class Classifier {
   }
 
   TensorImage preprocessInput(imglib.Image image) {
-    final inputTensor = TensorImage.fromImage(image);
+    TensorImage inputTensor = TensorImage.fromImage(image);
 
-    final minLength = max(inputTensor.height, inputTensor.width);
+    final minLength = min(inputTensor.height, inputTensor.width);
     final shapeLength = interpreter!.getInputTensor(0).shape[1];
 
-    imageProcessor = ImageProcessorBuilder()
+    // final quantOps = interpreter!.getInputTensor(0).params;
+
+    imageProcessor ??= ImageProcessorBuilder()
         .add(ResizeWithCropOrPadOp(minLength, minLength))
-        .add(ResizeOp(shapeLength, shapeLength, ResizeMethod.BILINEAR))
-        // .add(NormalizeOp(127.5, 127.5))
-        // .add(QuantizeOp(quantOps.zeroPoint.toDouble(), quantOps.scale))
+        .add(ResizeOp(shapeLength, shapeLength, ResizeMethod.NEAREST_NEIGHBOUR))
+        .add(NormalizeOp(0, 255))
         .build();
 
-    imageProcessor.process(inputTensor);
+    inputTensor = imageProcessor!.process(inputTensor);
+
     return inputTensor;
   }
 
-  List<Prediction> processOutput(TensorBuffer outputLocations,
-      TensorBuffer outputScores, int inputSize, imglib.Image image) {
+  // List<Prediction> processOutput(TensorBuffer outputLocations,
+  //     TensorBuffer outputScores, int inputSize, imglib.Image image) {
+  //   // final outputs = 1 / (1 + exp(-output))
+  //   final predictionProcessor = TensorProcessorBuilder().build();
+  //   final processedOutput = predictionProcessor.process(outputScores);
+
+  //   // Create label map
+  //   TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
+  //   List<Category> processedLabels = tensorLabels.getCategoryList();
+
+  //   List<Rect> boundingBoxes = BoundingBoxUtils.convert(
+  //     tensor: outputLocations,
+  //     valueIndex: [1, 0, 3, 2],
+  //     boundingBoxAxis: -2,
+  //     boundingBoxType: BoundingBoxType.BOUNDARIES,
+  //     coordinateType: CoordinateType.RATIO,
+  //     height: inputSize,
+  //     width: inputSize,
+  //   );
+
+  //   // Find predictions within threshold
+  //   List<Prediction> predictions = [];
+  //   Category cat;
+  //   double probability;
+  //   for (int i = 0; i < processedLabels.length; i++) {
+  //     cat = processedLabels.elementAt(i);
+
+  //     // Score not quantized so split by 255.0
+  //     probability = cat.score / 255.0;
+  //     if (probability > 0.5) {
+  //       Rect rectBoundary = imageProcessor.inverseTransformRect(
+  //           boundingBoxes[i], image.height, image.width);
+  //       predictions.add(
+  //           Prediction(i, cat.label, probability, rectBoundary, cameraInfo));
+  //     }
+  //   }
+
+  //   return predictions;
+  // }
+
+  // // Borrowed from package example - https://github.com/am15h/object_detection_flutter/blob/master/lib/tflite/classifier.dart
+  // List<Prediction> processOutput2(
+  //     TensorBuffer outputLocations,
+  //     TensorBuffer outputClasses,
+  //     TensorBuffer outputScores,
+  //     TensorBuffer numLocations,
+  //     int inputSize,
+  //     imglib.Image image) {
+  //   // Maximum number of results to show
+  //   int resultsCount = min(10, numLocations.getIntValue(0));
+
+  //   // Using labelOffset = 1 as ??? at index 0
+  //   int labelOffset = 1;
+
+  //   // Using bounding box utils for easy conversion of tensorbuffer to List<Rect>
+  //   List<Rect> locations = BoundingBoxUtils.convert(
+  //     tensor: outputLocations,
+  //     valueIndex: [1, 0, 3, 2],
+  //     boundingBoxAxis: 2,
+  //     boundingBoxType: BoundingBoxType.BOUNDARIES,
+  //     coordinateType: CoordinateType.RATIO,
+  //     height: inputSize,
+  //     width: inputSize,
+  //   );
+
+  //   List<Prediction> predictions = [];
+
+  //   for (int i = 0; i < resultsCount; i++) {
+  //     // Prediction score
+  //     double probability = outputScores.getDoubleValue(i);
+
+  //     // Label string
+  //     int labelIndex = outputClasses.getIntValue(i) + labelOffset;
+  //     String label = labelList.elementAt(labelIndex);
+
+  //     if (probability > threshold) {
+  //       // inverse of rect
+  //       // [locations] corresponds to the image size 300 X 300
+  //       // inverseTransformRect transforms it our [inputImage]
+  //       Rect transformedRect = imageProcessor.inverseTransformRect(
+  //           locations[i], image.height, image.width);
+
+  //       predictions.add(
+  //         Prediction(i, label, probability, transformedRect, cameraInfo),
+  //       );
+  //     }
+  //   }
+
+  //   return predictions;
+  // }
+
+  List<Prediction> processOutput3(
+      TensorBuffer output, int inputSize, imglib.Image image) {
     // final outputs = 1 / (1 + exp(-output))
     final predictionProcessor = TensorProcessorBuilder().build();
-    final processedOutput = predictionProcessor.process(outputScores);
-
-    // Create label map
+    final processedOutput = predictionProcessor.process(output);
     TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
     List<Category> processedLabels = tensorLabels.getCategoryList();
 
-    List<Rect> boundingBoxes = BoundingBoxUtils.convert(
-      tensor: outputLocations,
-      valueIndex: [1, 0, 3, 2],
-      boundingBoxAxis: -2,
-      boundingBoxType: BoundingBoxType.BOUNDARIES,
-      coordinateType: CoordinateType.RATIO,
-      height: inputSize,
-      width: inputSize,
-    );
-
     // Find predictions within threshold
-    List<Prediction> predictions = [];
-    Category cat;
     double probability;
+    Category cat;
+    List<Prediction> predictions = [];
     for (int i = 0; i < processedLabels.length; i++) {
       cat = processedLabels.elementAt(i);
 
       // Score not quantized so split by 255.0
       probability = cat.score / 255.0;
       if (probability > 0.5) {
-        Rect rectBoundary = imageProcessor.inverseTransformRect(
-            boundingBoxes[i], image.height, image.width);
-        predictions.add(
-            Prediction(i, cat.label, probability, rectBoundary, cameraInfo));
-      }
-    }
-
-    return predictions;
-  }
-
-  // Borrowed from package example - https://github.com/am15h/object_detection_flutter/blob/master/lib/tflite/classifier.dart
-  List<Prediction> processOutput2(
-      TensorBuffer outputLocations,
-      TensorBuffer outputClasses,
-      TensorBuffer outputScores,
-      TensorBuffer numLocations,
-      int inputSize,
-      imglib.Image image) {
-    // Maximum number of results to show
-    int resultsCount = min(10, numLocations.getIntValue(0));
-
-    // Using labelOffset = 1 as ??? at index 0
-    int labelOffset = 1;
-
-    // Using bounding box utils for easy conversion of tensorbuffer to List<Rect>
-    List<Rect> locations = BoundingBoxUtils.convert(
-      tensor: outputLocations,
-      valueIndex: [1, 0, 3, 2],
-      boundingBoxAxis: 2,
-      boundingBoxType: BoundingBoxType.BOUNDARIES,
-      coordinateType: CoordinateType.RATIO,
-      height: inputSize,
-      width: inputSize,
-    );
-
-    List<Prediction> predictions = [];
-
-    for (int i = 0; i < resultsCount; i++) {
-      // Prediction score
-      double probability = outputScores.getDoubleValue(i);
-
-      // Label string
-      int labelIndex = outputClasses.getIntValue(i) + labelOffset;
-      String label = labelList.elementAt(labelIndex);
-
-      if (probability > threshold) {
-        // inverse of rect
-        // [locations] corresponds to the image size 300 X 300
-        // inverseTransformRect transforms it our [inputImage]
-        Rect transformedRect = imageProcessor.inverseTransformRect(
-            locations[i], image.height, image.width);
-
-        predictions.add(
-          Prediction(i, label, probability, transformedRect, cameraInfo),
-        );
+        predictions.add(Prediction(i, cat.label, probability, null));
       }
     }
 
@@ -253,35 +279,37 @@ class Classifier {
     }
 
     TensorImage inputImage = preprocessInput(image);
+
+    TensorBufferFloat output =
+        TensorBufferFloat(interpreter!.getOutputTensor(0).shape);
     // TensorBuffer output = TensorBuffer.createFixedSize(
     //     interpreter!.getOutputTensor(0).shape,
     //     interpreter!.getOutputTensor(0).type);
-
-    List<List<int>> shapes =
-        interpreter!.getOutputTensors().map((tensor) => tensor.shape).toList();
-    TensorBuffer outputLocations = TensorBufferFloat(shapes[0]);
-    TensorBuffer outputClasses = TensorBufferFloat(shapes[1]);
-    TensorBuffer outputScores = TensorBufferFloat(shapes[2]);
-    TensorBuffer numLocations = TensorBufferFloat(shapes[3]);
-
-    Map<int, Object> outputs = {
-      0: outputLocations.buffer,
-      1: outputClasses.buffer,
-      2: outputScores.buffer,
-      3: numLocations.buffer,
-    };
 
     if (logEnabled) {
       logInfo(inputImage);
     }
 
-    interpreter!.runForMultipleInputs([inputImage.buffer], outputs);
+    ByteBuffer inputBuffer = inputImage.buffer;
 
-    // List<Prediction> predictions =
-    //     processOutput(output, inputImage.height, image);
+    Tensor inputTensor = interpreter!.getInputTensor(0);
+    List<int> size = [inputBuffer.lengthInBytes, inputTensor.numBytes()];
+    if (size[0] == size[1]) {
+      interpreter!.run(inputBuffer, output);
+    } else {
+      return {
+        "status": PredictionStatus.error,
+        "message":
+            "Image Input and Tensor Input byte size does not match: $size\nInterpreter cannot run if the byte sizes do not match",
+        "stop": true
+      };
+    }
 
-    List<Prediction> predictions = processOutput2(outputLocations,
-        outputClasses, outputScores, numLocations, inputImage.height, image);
+    List<Prediction> predictions =
+        processOutput3(output, inputImage.height, image);
+
+    // List<Prediction> predictions = processOutput2(outputLocations,
+    //     outputClasses, outputScores, numLocations, inputImage.height, image);
 
     return {
       "status": PredictionStatus.ok,

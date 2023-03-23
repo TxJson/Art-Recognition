@@ -38,7 +38,7 @@
         "settings": {
             "training": {
                 "weights":"yolov5n.pt",
-                "img": "416",
+                "img": "224",
                 "epochs": 100,
                 "batch": 40
             },
