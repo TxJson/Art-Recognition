@@ -5,15 +5,6 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 import 'package:image/image.dart';
 
-// Define the anchor box parameters and number of classes
-final anchorBoxes = [
-  [0.738768, 0.874946],
-  [2.42204, 2.65704],
-  [4.30971, 7.04493],
-  [10.246, 4.59428],
-  [12.6868, 11.8741]
-];
-
 class CustomTensorProcessor {
   final int _classes;
   final List<String> _labels;
