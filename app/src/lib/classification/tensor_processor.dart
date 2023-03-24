@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:art_app_fyp/classification/prediction.dart';
-import 'package:logger/logger.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 import 'package:image/image.dart';
@@ -86,30 +85,7 @@ class CustomTensorProcessor {
         }
       }
 
-      // Get the bounding box coordinates for this detection
-      final x = outputData[detectionOffset];
-      final y = outputData[detectionOffset + 1];
-      final width = outputData[detectionOffset + 2];
-      final height = outputData[detectionOffset + 3];
-
-      // Apply the anchor box parameters to the bounding box coordinates
-      final anchorBox = anchorBoxes[i % anchorBoxes.length];
-      final centerX = anchorBox[0] * width + x;
-      final centerY = anchorBox[1] * height + y;
-      final w = exp(width) * anchorBox[0];
-      final h = exp(height) * anchorBox[1];
-
-      // Add the detection to the list of results
-      // Map<String, dynamic> detection = {
-      //   "classId": classId,
-      //   "confidence": confidence,
-      //   "x": centerX - w / 2,
-      //   "y": centerY - h / 2,
-      //   "width": w,
-      //   "height": h,
-      // };
-
-      if (classId > -1) {
+      if (classId > -1 && classId <= classes) {
         Prediction detection =
             Prediction(classId, labels[classId], confidence, null);
         predictions.add(detection);
@@ -117,11 +93,5 @@ class CustomTensorProcessor {
     }
 
     return predictions;
-
-// // Sort the results by confidence score
-//     results.sort((a, b) => b.confidence.compareTo(a.confidence));
-
-// // Filter out low-confidence detections
-//     results = results.where((d) => d.confidence >= minConfidence).toList();
   }
 }

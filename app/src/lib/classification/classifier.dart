@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 import 'package:art_app_fyp/classification/tensor_processor.dart';
 import 'package:art_app_fyp/classification/prediction.dart';
@@ -41,7 +40,6 @@ class Classifier {
       loadDefaults(model, labels);
     } else if (labels is List<String>) {
       labelList = (labels as List<String>).trim();
-      // labelList.insert(0, '???');
     }
 
     if (labelList.isNotEmpty) {
