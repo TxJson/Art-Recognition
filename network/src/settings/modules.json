@@ -38,9 +38,9 @@
         "settings": {
             "training": {
                 "weights":"yolov5n.pt",
-                "img": "224",
+                "img": 224,
                 "epochs": 100,
-                "batch": 40
+                "batch": 20
             },
             "export": {
                 "format": "tflite"

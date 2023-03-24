@@ -40,12 +40,12 @@ class CameraView extends StatefulWidget {
 
 // String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/detect.tflite';
 // String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
-// String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
-// String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
+String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
+String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
 // String DEFAULT_MODEL = 'assets/template_model/detect.tflite';
 // String DEFAULT_LABELS = 'assets/template_model/labels.txt';
-String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
-String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
+// String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
+// String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
 
 class CameraViewState extends State<CameraView> {
   late IsolateInference isolator;

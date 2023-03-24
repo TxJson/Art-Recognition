@@ -1,11 +1,15 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:art_app_fyp/classification/tensor_processor.dart';
 import 'package:art_app_fyp/classification/prediction.dart';
 import 'package:art_app_fyp/screens/home/camera/cameraInfo.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as imglib;
+
+// Validators
+import 'package:art_app_fyp/shared/helpers/validators.dart';
 
 // TFLite Packages
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -23,6 +27,8 @@ class Classifier {
 
   Interpreter? interpreter;
 
+  late CustomTensorProcessor processor;
+
   Classifier(
       {required this.labels,
       this.model = '',
@@ -33,15 +39,15 @@ class Classifier {
     // Model is optional in case
     if (interpreter == null && labels is String && model.isNotEmpty) {
       loadDefaults(model, labels);
-    } else if (labels is List) {
-      labelList = labels;
+    } else if (labels is List<String>) {
+      labelList = (labels as List<String>).trim();
+      // labelList.insert(0, '???');
     }
 
-    // // Most outputs will return a value between 0-1
-    // // But some are irregular, their output will be between 0-100
-    // if (irregularOutput) {
-    //   threshold *= 100;
-    // }
+    if (labelList.isNotEmpty) {
+      processor = CustomTensorProcessor(
+          labelList.length, labelList, interpreter!.address, threshold);
+    }
   }
 
   // Will be initialized & loaded with loadLabels/loadModel
@@ -131,25 +137,6 @@ class Classifier {
     }
 
     interpreter!.allocateTensors();
-  }
-
-  TensorImage preprocessInput(imglib.Image image) {
-    TensorImage inputTensor = TensorImage.fromImage(image);
-
-    final minLength = min(inputTensor.height, inputTensor.width);
-    final shapeLength = interpreter!.getInputTensor(0).shape[1];
-
-    // final quantOps = interpreter!.getInputTensor(0).params;
-
-    imageProcessor ??= ImageProcessorBuilder()
-        .add(ResizeWithCropOrPadOp(minLength, minLength))
-        .add(ResizeOp(shapeLength, shapeLength, ResizeMethod.NEAREST_NEIGHBOUR))
-        .add(NormalizeOp(0, 255))
-        .build();
-
-    inputTensor = imageProcessor!.process(inputTensor);
-
-    return inputTensor;
   }
 
   // List<Prediction> processOutput(TensorBuffer outputLocations,
@@ -246,24 +233,42 @@ class Classifier {
   List<Prediction> processOutput3(
       TensorBuffer output, int inputSize, imglib.Image image) {
     // final outputs = 1 / (1 + exp(-output))
-    final predictionProcessor = TensorProcessorBuilder().build();
-    final processedOutput = predictionProcessor.process(output);
-    TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
-    List<Category> processedLabels = tensorLabels.getCategoryList();
+    // final predictionProcessor = TensorProcessorBuilder().build();
+    // final processedOutput = predictionProcessor.process(output);
 
-    // Find predictions within threshold
-    double probability;
-    Category cat;
+    processor.postprocess(output);
+
+    // List<double> probabilities = output.getDoubleList();
+    // int numLabels = (probabilities.length / 5).floor();
+    // List<int> ids = List<int>.generate(labelList.length, (i) => i + 1);
+
+    // double probability;
     List<Prediction> predictions = [];
-    for (int i = 0; i < processedLabels.length; i++) {
-      cat = processedLabels.elementAt(i);
+    // for (int i = 0; i < numLabels; i++) {
+    //   int detectionOffset = i * labelList.length;
+    //   probability = probabilities[detectionOffset + 5];
 
-      // Score not quantized so split by 255.0
-      probability = cat.score / 255.0;
-      if (probability > 0.5) {
-        predictions.add(Prediction(i, cat.label, probability, null));
-      }
-    }
+    //   // Score not quantized so split by 255.0
+    //   if (probability > 0.5) {
+    //     // predictions.add(Prediction(i, labelList[labelId], probability, null));
+    //   }
+    // }
+
+    // TensorLabel tensorLabels = TensorLabel.fromList(labelList, processedOutput);
+    // List<Category> processedLabels = tensorLabels.getCategoryList();
+
+    // Category cat;
+    // double probability;
+    // List<Prediction> predictions = [];
+    // for (int i = 0; i < processedLabels.length; i++) {
+    //   cat = processedLabels.elementAt(i);
+
+    //   // Score not quantized so split by 255.0
+    //   probability = cat.score / 255.0;
+    //   if (probability > 0.5) {
+    //     predictions.add(Prediction(i, cat.label, probability, null));
+    //   }
+    // }
 
     return predictions;
   }
@@ -278,38 +283,40 @@ class Classifier {
       };
     }
 
-    TensorImage inputImage = preprocessInput(image);
-
-    TensorBufferFloat output =
-        TensorBufferFloat(interpreter!.getOutputTensor(0).shape);
-    // TensorBuffer output = TensorBuffer.createFixedSize(
-    //     interpreter!.getOutputTensor(0).shape,
-    //     interpreter!.getOutputTensor(0).type);
+    TensorImage inputImage = processor.preprocess(image);
 
     if (logEnabled) {
       logInfo(inputImage);
     }
 
     ByteBuffer inputBuffer = inputImage.buffer;
+    TensorBuffer outputBuffer = TensorBuffer.createFixedSize(
+        interpreter!.getOutputTensor(0).shape,
+        interpreter!.getOutputTensor(0).type);
 
     Tensor inputTensor = interpreter!.getInputTensor(0);
-    List<int> size = [inputBuffer.lengthInBytes, inputTensor.numBytes()];
-    if (size[0] == size[1]) {
-      interpreter!.run(inputBuffer, output);
+    Tensor outputTensor = interpreter!.getOutputTensor(0);
+    if (inputTensor.bufferMatch(inputBuffer)) {
+      if (outputTensor.bufferMatch(outputBuffer)) {
+        interpreter!.run(inputBuffer, outputBuffer);
+      } else {
+        return {
+          "status": PredictionStatus.error,
+          "message":
+              "Output Tensors buffer size does not match: ${outputTensor.getBuffers(outputBuffer)}\nInterpreter cannot run if the byte sizes do not match",
+          "stop": true
+        };
+      }
     } else {
       return {
         "status": PredictionStatus.error,
         "message":
-            "Image Input and Tensor Input byte size does not match: $size\nInterpreter cannot run if the byte sizes do not match",
+            "Image Input and Tensor Input byte size does not match: ${inputTensor.getBuffers(inputBuffer)}\nInterpreter cannot run if the byte sizes do not match",
         "stop": true
       };
     }
 
-    List<Prediction> predictions =
-        processOutput3(output, inputImage.height, image);
-
-    // List<Prediction> predictions = processOutput2(outputLocations,
-    //     outputClasses, outputScores, numLocations, inputImage.height, image);
+    List<Prediction> predictions = processor.postprocess(outputBuffer);
 
     return {
       "status": PredictionStatus.ok,
