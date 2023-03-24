@@ -11,6 +11,10 @@ class CustomTensorProcessor {
   final int _interpreterAddress;
   final double _threshold;
 
+  // The number of elements in a YOLOv5 model
+  // Stands for (x, y, width, height, and probability score)
+  final yolov5Bounding = 5;
+
   bool _preprocessorInitialized = false;
   late ImageProcessor _imageProcessor;
   late Interpreter _interpreter;
@@ -27,18 +31,19 @@ class CustomTensorProcessor {
   TensorImage preprocess(Image img) {
     TensorImage inputTensor = TensorImage.fromImage(img);
 
-    final minLength = min(inputTensor.height, inputTensor.width);
-    final shapeLength = _interpreter.getInputTensor(0).shape[1];
+    // final minLength = min(inputTensor.height, inputTensor.width);
+    final shapeLength = min(_interpreter.getInputTensor(0).shape[1],
+        _interpreter.getInputTensor(0).shape[2]);
 
     // final quantOps = _interpreter.getInputTensor(0).params;
 
     if (!_preprocessorInitialized) {
       _imageProcessor = ImageProcessorBuilder()
-          .add(ResizeWithCropOrPadOp(minLength, minLength))
+          // .add(ResizeWithCropOrPadOp(minLength, minLength))
           .add(ResizeOp(
               shapeLength, shapeLength, ResizeMethod.NEAREST_NEIGHBOUR))
           .add(NormalizeOp(0, 255.0))
-          .add(CastOp(TfLiteType.float32))
+          // .add(CastOp(TfLiteType.float32))
           .build();
 
       _preprocessorInitialized = true;
@@ -60,26 +65,30 @@ class CustomTensorProcessor {
     List<Prediction> predictions = [];
     // Loop over the detections
     for (var i = 0; i < numDetections; i++) {
-      final detectionOffset = i * (_classes + 5);
+      final detectionOffset = i * (_classes + yolov5Bounding);
 
-      // Get the confidence score for this detection
-      final confidence = outputData[detectionOffset + 4];
+      // Get the probability score for this detection
+      // + 4 because probability score comes after the bounding box variables
+      // (x, y, width, height, and probability score)
+      final probability = outputData[detectionOffset + (yolov5Bounding - 1)];
 
       // Get the class ID for this detection
-      var classId = -1;
-      var maxClassConfidence = 0.0;
-      for (var j = 0; j < _classes; j++) {
-        final classConfidence = outputData[detectionOffset + 5 + j];
-        if (classConfidence > maxClassConfidence) {
-          classId = j;
-          maxClassConfidence = classConfidence;
+      int classId = -1;
+      double maxClassProbability = 0.0;
+      for (int classIndex = 0; classIndex < _classes; classIndex++) {
+        final classProbability =
+            outputData[detectionOffset + yolov5Bounding + classIndex];
+        if (classProbability > maxClassProbability) {
+          classId = classIndex;
+          maxClassProbability = classProbability;
         }
       }
 
       if (classId > -1 && classId <= classes) {
-        Prediction detection =
-            Prediction(classId, labels[classId], confidence, null);
-        predictions.add(detection);
+        if (probability > _threshold) {
+          predictions
+              .add(Prediction(classId, labels[classId], probability, null));
+        }
       }
     }
 

@@ -51,10 +51,6 @@ class Classifier {
   // Will be initialized & loaded with loadLabels/loadModel
   List<String> labelList = [];
 
-  // Output tensors
-  List<int> outputShapes = [];
-  List<int> outputTypes = [];
-
   // Used in image pre-processing
   ImageProcessor? imageProcessor;
 
