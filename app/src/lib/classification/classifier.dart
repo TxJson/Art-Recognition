@@ -154,7 +154,8 @@ class Classifier {
       };
     }
 
-    List<Prediction> predictions = processor.postprocess(outputBuffer);
+    Tensor outputs = interpreter!.getOutputTensor(0);
+    List<Prediction> predictions = processor.postprocess(outputs);
 
     return {
       "status": PredictionStatus.ok,
