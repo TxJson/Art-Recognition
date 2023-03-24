@@ -31,7 +31,7 @@ class CustomTensorProcessor {
   TensorImage preprocess(Image img) {
     TensorImage inputTensor = TensorImage.fromImage(img);
 
-    // final minLength = min(inputTensor.height, inputTensor.width);
+    final minLength = min(inputTensor.height, inputTensor.width);
     final shapeLength = min(_interpreter.getInputTensor(0).shape[1],
         _interpreter.getInputTensor(0).shape[2]);
 
@@ -39,11 +39,11 @@ class CustomTensorProcessor {
 
     if (!_preprocessorInitialized) {
       _imageProcessor = ImageProcessorBuilder()
-          // .add(ResizeWithCropOrPadOp(minLength, minLength))
+          .add(ResizeWithCropOrPadOp(minLength, minLength))
           .add(ResizeOp(
               shapeLength, shapeLength, ResizeMethod.NEAREST_NEIGHBOUR))
           .add(NormalizeOp(0, 255.0))
-          // .add(CastOp(TfLiteType.float32))
+          .add(CastOp(TfLiteType.float32))
           .build();
 
       _preprocessorInitialized = true;
@@ -54,15 +54,15 @@ class CustomTensorProcessor {
     return inputTensor;
   }
 
-  List<Prediction> postprocess(TensorBuffer output) {
+  List<Prediction> postprocess(Tensor output) {
     // Get the output shape and number of detections
     final outputShape = output.shape;
     final numDetections = outputShape[1];
 
     // Get the output data as a Float32List
-    final outputData = output.buffer.asFloat32List();
+    final outputData = output.data.buffer.asFloat32List();
 
-    List<Prediction> predictions = [];
+    List<Prediction> unfilteredPredictions = [];
     // Loop over the detections
     for (var i = 0; i < numDetections; i++) {
       final detectionOffset = i * (_classes + yolov5Bounding);
@@ -86,12 +86,26 @@ class CustomTensorProcessor {
 
       if (classId > -1 && classId <= classes) {
         if (probability > _threshold) {
-          predictions
+          unfilteredPredictions
               .add(Prediction(classId, labels[classId], probability, null));
         }
       }
     }
 
-    return predictions;
+    // There is probably a more efficient way to do this
+    // Filters out duplicates of detections and returns only the one with the
+    // highest probability
+    List<Prediction> filteredPredictions = [];
+    for (int i = 0; i < labels.length; i++) {
+      final matchingPredictions =
+          unfilteredPredictions.where((pred) => pred.id == i);
+      if (matchingPredictions.isNotEmpty) {
+        final pred = matchingPredictions.reduce(
+            (curr, next) => curr.probability > next.probability ? curr : next);
+        filteredPredictions.add(pred);
+      }
+    }
+
+    return filteredPredictions;
   }
 }
