@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/message.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:art_app_fyp/shared/isolate_inference/isolate_model.dart';
 import 'package:art_app_fyp/classification/classifier.dart';
@@ -24,28 +25,36 @@ class IsolateInference {
   }
 
   static void process(SendPort sendPort) async {
+    Message response;
     final port = ReceivePort();
     sendPort.send(port.sendPort);
 
     port.forEach((model) {
       if (model == null || model is! IsolateModel) {
+        response = Message(
+            status: OutcomeStatus.error, message: 'Model is null in isolate');
+        model.responsePort.send(response);
         return;
       }
 
       Classifier classifier = Classifier(
           labels: model.labels,
-          interpreter: Interpreter.fromAddress(model.interpreterAddress),
-          cameraInfo: model.cameraInfo);
+          interpreter: Interpreter.fromAddress(model.interpreterAddress));
+
+      classifier.load();
 
       // Convert image from yuv420 format
       imglib.Image image = Utilities.convertYUV420ToImage(model.cameraImage);
-      classifier.allocateInter(); // Allicate tensors if not already
+      classifier.allocateInter(); // Allocate tensors if not already
+
+      // If is android, rotate image by 90 degrees
+      // This is because many android devices store images in "portrait"
+      // when most machine learning models expect a "landscape" image
       if (Platform.isAndroid) {
         image = imglib.copyRotate(image, 90);
       }
-      Map<String, dynamic> response =
-          classifier.predictItem(image, logEnabled: model.logEnabled);
 
+      response = classifier.run(image);
       model.responsePort.send(response);
     });
   }

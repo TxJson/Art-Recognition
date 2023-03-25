@@ -1,4 +1,4 @@
-import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:art_app_fyp/shared/widgets/box.dart';
 import 'package:art_app_fyp/screens/home/footer_buttons.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
@@ -40,6 +40,7 @@ class MyHome extends StatelessWidget {
                     CameraView(
                         detectionActive: store.state.detectionState,
                         activeCameraIndex: store.state.activeCameraIndex,
+                        models: store.state.models,
                         resultsCallback: (List<Prediction> predictions) {
                           store.dispatch(SetPredictions(predictions));
                         },
@@ -51,27 +52,28 @@ class MyHome extends StatelessWidget {
                             store.dispatch(setDetectionDisabled());
                           }
                         }),
-                    // boundingBoxes(store.state.predictions),]
-
-                    // Visibility(
-                    //     visible: store.state.detectionState,
-                    //     child: boundingBoxes(store.state.predictions)),
                   ]),
                   persistentFooterButtons: <Widget>[
-                    FooterButtons(
-                        icon: const Icon(Icons.adb),
-                        text: 'Toggle Debug',
-                        backgroundColor: !store.state.debugState
-                            ? Colors.green
-                            : Utilities.getHexColor("#800000"),
-                        onPressed: () => store.dispatch(toggleDebugState())),
-                    FooterButtons(
-                        icon: const Icon(Icons.center_focus_strong),
-                        text: 'Toggle Detection',
-                        backgroundColor: !store.state.detectionState
-                            ? Colors.green
-                            : Utilities.getHexColor("#800000"),
-                        onPressed: () => store.dispatch(toggleDetection()))
+                    Visibility(
+                        visible: store.state.debugTools,
+                        child: Stack(children: <Widget>[
+                          FooterButtons(
+                              icon: const Icon(Icons.adb),
+                              text: 'Toggle Debug',
+                              backgroundColor: !store.state.debugState
+                                  ? Colors.green
+                                  : Utilities.getHexColor("#800000"),
+                              onPressed: () =>
+                                  store.dispatch(toggleDebugState())),
+                          FooterButtons(
+                              icon: const Icon(Icons.center_focus_strong),
+                              text: 'Toggle Detection',
+                              backgroundColor: !store.state.detectionState
+                                  ? Colors.green
+                                  : Utilities.getHexColor("#800000"),
+                              onPressed: () =>
+                                  store.dispatch(toggleDetection()))
+                        ]))
                   ],
 
                   /// Set button icon for detecting artwork
@@ -121,15 +123,14 @@ class MyHome extends StatelessWidget {
                       debugState: store.state.debugState,
                       spacing: 20,
                       children: <Widget>[
-                        // Text(
-                        //     'Detection Status: ${state.detectionState ? 'On' : 'Off'}'),
-                        Text(
-                            'Total Cameras: ${store.state.cameras?.length ?? "null"}'),
                         Text(
                             'Active Camera Index: ${store.state.activeCameraIndex}'),
                         Text(
                             'Detections: ${store.state.predictions?.length ?? "null"}'),
-                        Text('Detection Active: ${store.state.detectionState}')
+                        Text(
+                            'Detection Status: ${store.state.detectionState ? 'On' : 'Off'}'),
+                        Text(
+                            'Active Model: ${store.state.models.getActive().name}')
                       ]));
             }));
   }

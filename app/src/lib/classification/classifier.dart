@@ -1,7 +1,8 @@
 import 'dart:typed_data';
+import 'package:art_app_fyp/classification/common_response.dart';
 import 'package:art_app_fyp/classification/tensor_processor.dart';
-import 'package:art_app_fyp/classification/prediction.dart';
-import 'package:art_app_fyp/screens/home/camera/cameraInfo.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/message.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -19,7 +20,7 @@ class Classifier {
 
   final String model; // Pass asset path, ex assets/model.tflite
   final dynamic labels; // Pass asset path, ex assets/labels.txt
-  final CameraInfo? cameraInfo;
+  final int maxResults;
 
   final int threads;
   double threshold;
@@ -34,19 +35,7 @@ class Classifier {
       this.threshold = 0.5, // Threshold between 0 - 1
       this.threads = 4,
       this.interpreter,
-      this.cameraInfo}) {
-    // Model is optional in case
-    if (interpreter == null && labels is String && model.isNotEmpty) {
-      loadDefaults(model, labels);
-    } else if (labels is List<String>) {
-      labelList = (labels as List<String>).trim();
-    }
-
-    if (labelList.isNotEmpty) {
-      processor = CustomTensorProcessor(
-          labelList.length, labelList, interpreter!.address, threshold);
-    }
-  }
+      this.maxResults = 10});
 
   // Will be initialized & loaded with loadLabels/loadModel
   List<String> labelList = [];
@@ -54,25 +43,37 @@ class Classifier {
   // Used in image pre-processing
   ImageProcessor? imageProcessor;
 
-  void loadDefaults(String model, String labels) async {
-    if (labels.isEmpty) {
-      // Warn if we are loading an empty list
-      logger.w('No labels passed: ', labels);
-      return;
+  Future load() async {
+    if (labels is String) {
+      if (labels.isEmpty) {
+        // Warn if we are loading an empty list
+        logger.w('No labels passed: ', labels);
+        return;
+      }
+      await loadLabels(labels);
+    } else if (labels is List<String>) {
+      labelList = labels;
+    } else {
+      logger.w('Something went wrong when trying to retrieve the labels');
     }
-    loadLabels(labels);
 
-    if (model.isEmpty) {
-      // Warn if we are loading an empty list
-      logger.w('No model passed: ', model);
-      return;
+    // Only necessary if we want to pass
+    if (interpreter == null) {
+      if (model.isEmpty) {
+        // Warn if we are loading an empty list
+        logger.w('No model passed: ', model);
+        return;
+      }
+      await loadModel(model);
     }
-    loadModel(model);
 
-    logger.i('Classifier default loaded successfully');
+    processor = CustomTensorProcessor(labelList.length, labelList,
+        interpreter!.address, threshold, maxResults);
+
+    // logger.i('Classifier default loaded successfully');
   }
 
-  void loadLabels(String labels) async {
+  Future loadLabels(String labels) async {
     try {
       labelList = await rootBundle.loadString(labels).then((lbls) {
         return lbls.toString().split('\n');
@@ -87,7 +88,7 @@ class Classifier {
     }
   }
 
-  void loadModel(String model) async {
+  Future loadModel(String model) async {
     // Interpreter prefers it without the "assets/"" string
     // Still want to allow it to be passed for clarity
     model = Utilities.removeIfExists(model, 'assets/');
@@ -117,12 +118,10 @@ class Classifier {
   }
 
   // https://pub.dev/packages/tflite_flutter_helper
-  Map<String, dynamic> predictItem(Image image, {bool logEnabled = false}) {
+  /// Make prediction
+  Message run(Image image) {
     if (interpreter == null || interpreter!.isDeleted) {
-      return {
-        "status": PredictionStatus.error,
-        "message": "Interpreter is null or deleted"
-      };
+      return ResponseError.noInterpreter();
     }
 
     TensorImage inputImage = processor.preprocess(image);
@@ -138,29 +137,18 @@ class Classifier {
       if (outputTensor.bufferMatch(outputBuffer)) {
         interpreter!.run(inputBuffer, outputBuffer);
       } else {
-        return {
-          "status": PredictionStatus.error,
-          "message":
-              "Output Tensors buffer size does not match: ${outputTensor.getBuffers(outputBuffer)}\nInterpreter cannot run if the byte sizes do not match",
-          "stop": true
-        };
+        return ResponseError.output(outputTensor.getBuffers(outputBuffer));
       }
     } else {
-      return {
-        "status": PredictionStatus.error,
-        "message":
-            "Image Input and Tensor Input byte size does not match: ${inputTensor.getBuffers(inputBuffer)}\nInterpreter cannot run if the byte sizes do not match",
-        "stop": true
-      };
+      return ResponseError.input(inputTensor.getBuffers(inputBuffer));
     }
 
     Tensor outputs = interpreter!.getOutputTensor(0);
     List<Prediction> predictions = processor.postprocess(outputs);
 
-    return {
-      "status": PredictionStatus.ok,
-      "result": predictions,
-    };
+    logger.i(predictions.toString());
+
+    return ResponseOk.createOk(predictions);
   }
 
   void close() {

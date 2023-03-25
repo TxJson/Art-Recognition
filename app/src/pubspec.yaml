@@ -69,16 +69,15 @@ flutter:
   # My Assets
   assets:
     - assets/
+    - assets/models.json
     - assets/yolov5n_art_style/detect.tflite
     - assets/yolov5n_art_style/labels.txt
     - assets/yolov5_license_plates/detect.tflite
     - assets/yolov5_license_plates/labels.txt
-    - assets/default_yolov5/detect.tflite
-    - assets/default_yolov5/labels.txt
+    - assets/default_yolov5n/detect.tflite
+    - assets/default_yolov5n/labels.txt
     - assets/default_ssd_mobilenet/detect.tflite
     - assets/default_ssd_mobilenet/labels.txt
-    - assets/template_model/detect.tflite
-    - assets/template_model/labels.txt
 
   # To add assets to your application, add an assets section, like this:
   # assets:
