@@ -1,6 +1,10 @@
+import 'package:art_app_fyp/shared/widgets/debugStatus.dart';
+import 'package:art_app_fyp/store/appstate.dart';
 import 'package:flutter/material.dart';
 import 'package:art_app_fyp/screens/home/main.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_redux/flutter_redux.dart';
 
 enum AppPages {
   home(0);
@@ -55,9 +59,28 @@ class MyAppState extends State<MyApp> {
       //   break;
     }
 
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
     return Scaffold(
-      body: SizedBox.expand(child: child),
-      // bottomNavigationBar: navigationBar(),
-    );
+        body: SizedBox.expand(child: child),
+        bottomSheet: StoreConnector<AppState, dynamic>(
+            converter: (store) => store.state,
+            builder: (context, state) => DebugStatus(
+                    debugState: state.debugState,
+                    debugTools: state.debugTools,
+                    spacing: 20,
+                    children: <Widget>[
+                      Text('Active Camera Index: ${state.activeCameraIndex}'),
+                      Text(
+                          'Detections: ${state.predictions?.length ?? "null"}'),
+                      Text(
+                          'Detection Status: ${state.detectionState ? 'On' : 'Off'}'),
+                      Text('Active Model: ${state.models.getActive().name}')
+                    ]))
+        // bottomNavigationBar: navigationBar(),
+        );
   }
 }

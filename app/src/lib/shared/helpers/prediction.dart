@@ -12,6 +12,13 @@ class Prediction {
   int get getId => id;
   String get getLabel => label;
   double get getProbability => probability;
+
+  String formatString() {
+    final percentageProbability = (probability * 100).toStringAsFixed(2);
+
+    return '${label.trim()} - $percentageProbability%';
+  }
+
   @override
   String toString() {
     return 'Prediction(id: $id, label: $label, probability: $probability)';

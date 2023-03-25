@@ -1,8 +1,9 @@
+import 'package:art_app_fyp/screens/home/prediction_display.dart';
 import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:art_app_fyp/shared/widgets/box.dart';
 import 'package:art_app_fyp/screens/home/footer_buttons.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
-import 'package:art_app_fyp/shared/widgets/debug.dart';
+import 'package:art_app_fyp/shared/widgets/debugStatus.dart';
 import 'package:art_app_fyp/screens/home/camera/camera.dart';
 import 'package:art_app_fyp/store/actions.dart';
 import 'package:camera/camera.dart';
@@ -33,105 +34,90 @@ class MyHome extends StatelessWidget {
             converter: (store) => store,
             builder: (context, store) {
               return Scaffold(
-                  backgroundColor: Colors.black,
+                backgroundColor: Colors.black,
 
-                  /// Set camera view from StoreConnector
-                  body: Stack(children: <Widget>[
-                    CameraView(
-                        detectionActive: store.state.detectionState,
-                        activeCameraIndex: store.state.activeCameraIndex,
-                        models: store.state.models,
-                        resultsCallback: (List<Prediction> predictions) {
-                          store.dispatch(SetPredictions(predictions));
-                        },
-                        setCameras: (List<CameraDescription> cameras) {
-                          store.dispatch(cameras);
-                        },
-                        stopPredictions: (bool stop) {
-                          if (stop) {
-                            store.dispatch(setDetectionDisabled());
-                          }
-                        }),
-                  ]),
-                  persistentFooterButtons: <Widget>[
-                    Visibility(
-                        visible: store.state.debugTools,
-                        child: Stack(children: <Widget>[
-                          FooterButtons(
-                              icon: const Icon(Icons.adb),
-                              text: 'Toggle Debug',
-                              backgroundColor: !store.state.debugState
-                                  ? Colors.green
-                                  : Utilities.getHexColor("#800000"),
-                              onPressed: () =>
-                                  store.dispatch(toggleDebugState())),
-                          FooterButtons(
-                              icon: const Icon(Icons.center_focus_strong),
-                              text: 'Toggle Detection',
-                              backgroundColor: !store.state.detectionState
-                                  ? Colors.green
-                                  : Utilities.getHexColor("#800000"),
-                              onPressed: () =>
-                                  store.dispatch(toggleDetection()))
-                        ]))
-                  ],
+                /// Set camera view from StoreConnector
+                body: Stack(children: <Widget>[
+                  CameraView(
+                      detectionActive: store.state.detectionState,
+                      activeCameraIndex: store.state.activeCameraIndex,
+                      models: store.state.models,
+                      resultsCallback: (List<Prediction> predictions) {
+                        store.dispatch(SetPredictions(predictions));
+                      },
+                      setCameras: (List<CameraDescription> cameras) {
+                        store.dispatch(cameras);
+                      },
+                      stopPredictions: (bool stop) {
+                        if (stop) {
+                          store.dispatch(setDetectionDisabled());
+                        }
+                      }),
+                ]),
+                persistentFooterButtons: <Widget>[
+                  FooterButtons(
+                      visible: store.state.debugTools,
+                      icon: const Icon(Icons.adb),
+                      text: 'Debug',
+                      backgroundColor: !store.state.debugState
+                          ? Colors.green
+                          : Utilities.getHexColor("#800000"),
+                      onPressed: () => store.dispatch(toggleDebugState())),
+                  FooterButtons(
+                      visible: store.state.debugTools,
+                      icon: const Icon(Icons.center_focus_strong),
+                      text: 'Detection',
+                      backgroundColor: !store.state.detectionState
+                          ? Colors.green
+                          : Utilities.getHexColor("#800000"),
+                      onPressed: () => store.dispatch(toggleDetection()))
+                ],
+                bottomSheet: PredictionDisplay(
+                    predictions: store.state.predictions,
+                    detectionState: store.state.detectionState),
 
-                  /// Set button icon for detecting artwork
-                  // floatingActionButton: SizedBox(
-                  //     height: 100,
-                  //     child: Column(children: <Widget>[
-                  //       Padding(
-                  //         padding: const EdgeInsets.only(bottom: 10),
-                  //         child: Text(state.detectionState ? 'Scanning...' : '',
-                  //             style: TextStyle(
-                  //               color: Utilities.getHexColor('FFFFFF', opacity: 1),
-                  //               fontWeight: FontWeight.bold,
-                  //               fontSize: 15,
-                  //             )),
-                  //       ),
-                  //       SizedBox(
-                  //         width: 80,
-                  //         height: 75,
-                  //         child: StoreConnector<AppState, dynamic>(
-                  //             converter: (store) => store.dispatch,
-                  //             builder: (context, dispatch) {
-                  //               return Listener(
-                  //                   onPointerDown: (event) {
-                  //                     dispatch(setDetectionActive());
-                  //                   },
-                  //                   onPointerUp: (event) {
-                  //                     dispatch(setDetectionDisabled());
-                  //                   },
-                  //                   child: FittedBox(
-                  //                     child: FloatingActionButton(
-                  //                       onPressed: () {},
-                  //                       backgroundColor: Colors.black,
-                  //                       splashColor:
-                  //                           Colors.red.withOpacity(0.75),
-                  //                       child: const Icon(
-                  //                           Icons.center_focus_strong),
-                  //                     ),
-                  //                   ));
-                  //             }),
-                  //       )
-                  //     ])),
-                  // floatingActionButtonLocation:
-                  //     FloatingActionButtonLocation.centerFloat,
-
-                  /// Debug functionality
-                  bottomSheet: MyDebug(
-                      debugState: store.state.debugState,
-                      spacing: 20,
-                      children: <Widget>[
-                        Text(
-                            'Active Camera Index: ${store.state.activeCameraIndex}'),
-                        Text(
-                            'Detections: ${store.state.predictions?.length ?? "null"}'),
-                        Text(
-                            'Detection Status: ${store.state.detectionState ? 'On' : 'Off'}'),
-                        Text(
-                            'Active Model: ${store.state.models.getActive().name}')
-                      ]));
+                /// Set button icon for detecting artwork
+                // floatingActionButton: SizedBox(
+                //     height: 100,
+                //     child: Column(children: <Widget>[
+                //       Padding(
+                //         padding: const EdgeInsets.only(bottom: 10),
+                //         child: Text(state.detectionState ? 'Scanning...' : '',
+                //             style: TextStyle(
+                //               color: Utilities.getHexColor('FFFFFF', opacity: 1),
+                //               fontWeight: FontWeight.bold,
+                //               fontSize: 15,
+                //             )),
+                //       ),
+                //       SizedBox(
+                //         width: 80,
+                //         height: 75,
+                //         child: StoreConnector<AppState, dynamic>(
+                //             converter: (store) => store.dispatch,
+                //             builder: (context, dispatch) {
+                //               return Listener(
+                //                   onPointerDown: (event) {
+                //                     dispatch(setDetectionActive());
+                //                   },
+                //                   onPointerUp: (event) {
+                //                     dispatch(setDetectionDisabled());
+                //                   },
+                //                   child: FittedBox(
+                //                     child: FloatingActionButton(
+                //                       onPressed: () {},
+                //                       backgroundColor: Colors.black,
+                //                       splashColor:
+                //                           Colors.red.withOpacity(0.75),
+                //                       child: const Icon(
+                //                           Icons.center_focus_strong),
+                //                     ),
+                //                   ));
+                //             }),
+                //       )
+                //     ])),
+                // floatingActionButtonLocation:
+                //     FloatingActionButtonLocation.centerFloat,
+              );
             }));
   }
 }
