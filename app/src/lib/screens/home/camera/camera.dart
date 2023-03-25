@@ -80,19 +80,14 @@ class CameraViewState extends State<CameraView> {
   void initDefaults() async {
     logger = Logger();
 
+    // Gets the currently active model
     activeModel = widget.models.getActive();
 
-    // If the labels are already loaded, no need to load them again
-    if (activeModel.labelsLoaded) {
-      classifier = Classifier(
-          labels: activeModel.labelList, model: activeModel.modelPath);
-    } else {
-      classifier = Classifier(
-          labels: activeModel.labelsPath, model: activeModel.modelPath);
-    }
-
+    // Initialize classifier and load
+    classifier = Classifier(model: activeModel);
     await classifier.load();
 
+    // Initialize Isolate and start
     isolator = IsolateInference();
     await isolator.start();
   }
@@ -197,12 +192,9 @@ class CameraViewState extends State<CameraView> {
   }
 
   Future<Message> predictIsolate(CameraImage cameraImage) async {
-    int maxResults = activeModel.detectionsCount;
-    IsolateModel isolateModel = IsolateModel(
-        interpreterAddress: classifier.interAddress,
-        cameraImage: cameraImage,
-        labels: classifier.listOfLabels,
-        maxResults: maxResults == -1 ? 10 : maxResults);
+    Model activeModel = widget.models.getActive();
+    IsolateModel isolateModel =
+        IsolateModel(cameraImage: cameraImage, activeModel: activeModel);
 
     // Start isolator
     ReceivePort responsePort = ReceivePort();

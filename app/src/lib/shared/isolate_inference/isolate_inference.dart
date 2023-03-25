@@ -37,9 +37,7 @@ class IsolateInference {
         return;
       }
 
-      Classifier classifier = Classifier(
-          labels: model.labels,
-          interpreter: Interpreter.fromAddress(model.interpreterAddress));
+      Classifier classifier = Classifier(model: model.activeModel);
 
       classifier.load();
 

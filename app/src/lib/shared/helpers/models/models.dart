@@ -93,8 +93,7 @@ class Models {
     logger.w('Unable to set item $item to active state $state');
   }
 
-  /// Currently we only allow one model at a time to be active
-  /// This may change in the future...
+  /// Currently we only allow one model at a time to be active.
   Model getActive() {
     final index = _models.indexWhere((model) => model.active == true);
     return _models[index];
