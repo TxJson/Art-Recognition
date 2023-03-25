@@ -1,8 +1,10 @@
 import 'dart:isolate';
 
 import 'package:art_app_fyp/classification/classifier.dart';
-import 'package:art_app_fyp/classification/prediction.dart';
-import 'package:art_app_fyp/screens/home/camera/cameraInfo.dart';
+import 'package:art_app_fyp/shared/helpers/models/model.dart';
+import 'package:art_app_fyp/shared/helpers/models/models.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/message.dart';
 import 'package:art_app_fyp/shared/widgets/loader.dart';
 import 'package:art_app_fyp/shared/isolate_inference/isolate_inference.dart';
 import 'package:art_app_fyp/shared/isolate_inference/isolate_model.dart';
@@ -13,46 +15,54 @@ import 'package:flutter/material.dart';
 import 'package:art_app_fyp/shared/helpers/validators.dart';
 import 'package:logger/logger.dart';
 
+// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/detect.tflite';
+// String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
+// String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
+// String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
+// String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
+// String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
+// String DEFAULT_MODEL = 'assets/default_yolov5/detect.tflite';
+// String DEFAULT_LABELS = 'assets/default_yolov5/labels.txt';
+
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
 class CameraView extends StatefulWidget {
-  final int activeCameraIndex;
-  final bool detectionActive;
+  final int _activeCameraIndex;
+  final bool _detectionActive;
+  final Models _models;
 
   /// Callback to pass results after inference to [HomeView]
-  final Function(List<Prediction>) resultsCallback;
-  final Function(List<CameraDescription>) setCameras;
-  final Function(bool stop) stopPredictions;
+  final Function(List<Prediction>) _resultsCallback;
+  final Function(List<CameraDescription>) _setCameras;
+  final Function(bool stop) _stopPredictions;
 
   // Default Constructor
   const CameraView(
       {Key? key,
-      required this.activeCameraIndex,
-      required this.resultsCallback,
-      required this.setCameras,
-      required this.stopPredictions,
-      this.detectionActive = false})
-      : super(key: key);
+      required int activeCameraIndex,
+      required Models models,
+      required dynamic Function(List<Prediction>) resultsCallback,
+      required dynamic Function(List<CameraDescription>) setCameras,
+      required dynamic Function(bool) stopPredictions,
+      bool detectionActive = false})
+      : _stopPredictions = stopPredictions,
+        _setCameras = setCameras,
+        _resultsCallback = resultsCallback,
+        _models = models,
+        _detectionActive = detectionActive,
+        _activeCameraIndex = activeCameraIndex,
+        super(key: key);
+
+  Models get models => _models;
 
   @override
   State<CameraView> createState() => CameraViewState();
 }
 
-// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/detect.tflite';
-// String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
-// String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
-// String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
-// String DEFAULT_MODEL = 'assets/template_model/detect.tflite';
-// String DEFAULT_LABELS = 'assets/template_model/labels.txt';
-String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
-String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
-// String DEFAULT_MODEL = 'assets/default_yolov5/detect.tflite';
-// String DEFAULT_LABELS = 'assets/default_yolov5/labels.txt';
-
 class CameraViewState extends State<CameraView> {
   late IsolateInference isolator;
   late Classifier classifier;
-  late CameraInfo cameraInfo;
+  late Model activeModel;
   late Logger logger;
 
   CameraController? controller;
@@ -68,8 +78,20 @@ class CameraViewState extends State<CameraView> {
   }
 
   void initDefaults() async {
-    classifier = Classifier(labels: DEFAULT_LABELS, model: DEFAULT_MODEL);
     logger = Logger();
+
+    activeModel = widget.models.getActive();
+
+    // If the labels are already loaded, no need to load them again
+    if (activeModel.labelsLoaded) {
+      classifier = Classifier(
+          labels: activeModel.labelList, model: activeModel.modelPath);
+    } else {
+      classifier = Classifier(
+          labels: activeModel.labelsPath, model: activeModel.modelPath);
+    }
+
+    await classifier.load();
 
     isolator = IsolateInference();
     await isolator.start();
@@ -86,21 +108,14 @@ class CameraViewState extends State<CameraView> {
 
   void initCamera() async {
     final List<CameraDescription> cameras = await availableCameras();
-    widget.setCameras(cameras);
+    widget._setCameras(cameras);
     controller = CameraController(
-        cameras[widget.activeCameraIndex], ResolutionPreset.max,
+        cameras[widget._activeCameraIndex], ResolutionPreset.max,
         enableAudio: false);
     if (controller != null) {
       controller!.initialize().then((_) async {
         if (!mounted) {
           return;
-        }
-
-        Size? previewSize = controller!.value.previewSize;
-        if (previewSize != null) {
-          cameraInfo = CameraInfo(previewSize, MediaQuery.of(context).size);
-        } else {
-          cameraInfo = CameraInfo();
         }
 
         await controller!.startImageStream(cameraStream);
@@ -124,7 +139,7 @@ class CameraViewState extends State<CameraView> {
     if (isPredicting ||
         !isInitialized() ||
         !mounted ||
-        !widget.detectionActive) {
+        !widget._detectionActive) {
       return;
     }
 
@@ -133,14 +148,14 @@ class CameraViewState extends State<CameraView> {
     });
 
     if (isPredicting) {
-      Map<String, dynamic>? response = await predictIsolate(cameraImage);
+      Message? response = await predictIsolate(cameraImage);
       List<Prediction>? predictionResponse = handleResponse(response);
 
       if (predictionResponse == null) {
         // If response is suddenly null, set predictions to an empty list
-        widget.resultsCallback([]);
+        widget._resultsCallback([]);
       } else {
-        widget.resultsCallback(predictionResponse);
+        widget._resultsCallback(predictionResponse);
       }
     }
 
@@ -149,20 +164,28 @@ class CameraViewState extends State<CameraView> {
     });
   }
 
-  List<Prediction>? handleResponse(Map<String, dynamic> response) {
-    if (response['status'] == PredictionStatus.ok) {
-      return response['result'];
-    } else if (response['status'] == PredictionStatus.warning) {
-      logger.w(response['message']);
-    } else if (response['status'] == PredictionStatus.error) {
-      logger.e(response['message']);
-    }
+  List<Prediction>? handleResponse(Message response) {
+    if (response.status == OutcomeStatus.ok) {
+      if (response.result is List<Prediction>) {
+        return response.result;
+      } else {
+        return [];
+      }
+    } else {
+      if (response.status == OutcomeStatus.warning) {
+        logger.w(response.message);
+      }
 
-    if (response['stop']) {
-      widget.stopPredictions(response['stop']);
-      setState(() {
-        isPredicting = false;
-      });
+      if (response.status == OutcomeStatus.error) {
+        logger.e(response.message);
+      }
+
+      if (response.action == BehaviorActions.stop) {
+        widget._stopPredictions(true);
+        setState(() {
+          isPredicting = false;
+        });
+      }
     }
 
     return null;
@@ -173,19 +196,19 @@ class CameraViewState extends State<CameraView> {
     return (classifier.interpreterDefined && isolator.sendPortInitialized);
   }
 
-  Future<Map<String, dynamic>> predictIsolate(CameraImage cameraImage) async {
+  Future<Message> predictIsolate(CameraImage cameraImage) async {
+    int maxResults = activeModel.detectionsCount;
     IsolateModel isolateModel = IsolateModel(
         interpreterAddress: classifier.interAddress,
         cameraImage: cameraImage,
         labels: classifier.listOfLabels,
-        cameraInfo: cameraInfo,
-        logEnabled: false);
+        maxResults: maxResults == -1 ? 10 : maxResults);
 
     // Start isolator
     ReceivePort responsePort = ReceivePort();
     isolator.sendPort.send(isolateModel..responsePort = responsePort.sendPort);
 
-    Map<String, dynamic> response = await responsePort.first;
+    Message response = await responsePort.first;
     return response;
   }
 

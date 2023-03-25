@@ -1,4 +1,4 @@
-import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:art_app_fyp/store/appstate.dart';
 import 'package:camera/camera.dart';
 import 'package:redux_thunk/redux_thunk.dart';

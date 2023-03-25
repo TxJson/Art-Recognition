@@ -1,4 +1,5 @@
-import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/models/models.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:art_app_fyp/shared/helpers/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -6,33 +7,44 @@ import './actions.dart';
 
 @immutable
 class AppState {
-  final List<CameraDescription> cameras;
   final bool detectionState;
   final bool debugState;
+  final bool debugTools;
   final int activeCameraIndex;
   final List<Prediction>? predictions;
+  final Models models;
 
   const AppState(
-      {this.cameras = const <CameraDescription>[],
+      {required this.models,
+      required this.activeCameraIndex,
+      this.debugTools = false,
       this.detectionState = false,
       this.debugState = false,
-      this.activeCameraIndex = 0,
       this.predictions});
 }
 
 // Only change passed variables in AppState, keep the rest the same
 AppState updateAppState(state,
-    {cameras, detectionState, debugState, activeCameraIndex, predictions}) {
+    {models,
+    cameras,
+    detectionState,
+    debugState,
+    debugTools,
+    activeCameraIndex,
+    predictions}) {
   return AppState(
-      cameras: Validators.defaultIfNull(cameras, state.cameras),
+      models: Validators.defaultIfNull(models, state.models),
       detectionState:
           Validators.defaultIfNull(detectionState, state.detectionState),
       debugState: Validators.defaultIfNull(debugState, state.debugState),
+      debugTools: Validators.defaultIfNull(debugTools, state.debugTools),
       activeCameraIndex:
           Validators.defaultIfNull(activeCameraIndex, state.activeCameraIndex),
       predictions: Validators.defaultIfNull(predictions, state.predictions));
 }
 
+// TODO: Cleanup functionality
+// This could likely be cleaned up but not important right now
 AppState appReducer(AppState state, action) {
   if (action is SetDetectionActiveAction) {
     return updateAppState(state, detectionState: action.payload);

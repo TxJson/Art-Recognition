@@ -1,0 +1,27 @@
+{
+    "default_yolov5n": {
+        "path": "default_yolov5n",
+        "labels": "labels.txt",
+        "model": "detect.tflite",
+        "available": false
+    },
+    "yolov5_art_style": {
+        "path": "yolov5n_art_style",
+        "labels": "labels.txt",
+        "model": "detect.tflite",
+        "available": true,
+        "detections_count": 1
+    },
+    "yolov5_license_plates": {
+        "path": "yolov5_license_plates",
+        "labels": "labels.txt",
+        "model": "detect.tflite",
+        "available": true
+    },
+    "ssd_mobile_net": {
+        "path": "default_ssd_mobilenet",
+        "labels": "labels.txt",
+        "model": "detect.tflite",
+        "available": false
+    }
+}

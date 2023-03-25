@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:art_app_fyp/classification/prediction.dart';
+import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 import 'package:image/image.dart';
@@ -10,6 +10,7 @@ class CustomTensorProcessor {
   final List<String> _labels;
   final int _interpreterAddress;
   final double _threshold;
+  final int _maxResults;
 
   // The number of elements in a YOLOv5 model
   // Stands for (x, y, width, height, and probability score)
@@ -18,15 +19,17 @@ class CustomTensorProcessor {
   bool _preprocessorInitialized = false;
   late ImageProcessor _imageProcessor;
   late Interpreter _interpreter;
+  late List<Prediction> _predictions;
 
-  CustomTensorProcessor(
-      this._classes, this._labels, this._interpreterAddress, this._threshold) {
+  CustomTensorProcessor(this._classes, this._labels, this._interpreterAddress,
+      this._threshold, this._maxResults) {
     _interpreter = Interpreter.fromAddress(_interpreterAddress);
   }
 
   int get classes => _classes;
   List<String> get labels => _labels;
   bool get preprocessInitialized => _preprocessorInitialized;
+  List<Prediction> get predictions => _predictions;
 
   TensorImage preprocess(Image img) {
     TensorImage inputTensor = TensorImage.fromImage(img);
@@ -57,18 +60,18 @@ class CustomTensorProcessor {
   List<Prediction> postprocess(Tensor output) {
     // Get the output shape and number of detections
     final outputShape = output.shape;
-    final numDetections = outputShape[1];
+    final detectionCount = outputShape[1];
 
     // Get the output data as a Float32List
     final outputData = output.data.buffer.asFloat32List();
 
     List<Prediction> unfilteredPredictions = [];
     // Loop over the detections
-    for (var i = 0; i < numDetections; i++) {
+    for (var i = 0; i < detectionCount; i++) {
       final detectionOffset = i * (_classes + yolov5Bounding);
 
       // Get the probability score for this detection
-      // + 4 because probability score comes after the bounding box variables
+      // + 4 because probability score comes after the bounding box variables in YOLOv5
       // (x, y, width, height, and probability score)
       final probability = outputData[detectionOffset + (yolov5Bounding - 1)];
 
@@ -84,10 +87,16 @@ class CustomTensorProcessor {
         }
       }
 
+      // TODO: Process bounding boxes
+      // The rest of the values returned from YOLOv5 can probably be interpreted here as well
+      // Such as the bounding boxes
+
+      // Check that classId is valid
       if (classId > -1 && classId <= classes) {
+        // Check that probability is higher than the set threshold
         if (probability > _threshold) {
           unfilteredPredictions
-              .add(Prediction(classId, labels[classId], probability, null));
+              .add(Prediction(classId, labels[classId], probability));
         }
       }
     }
@@ -106,6 +115,15 @@ class CustomTensorProcessor {
       }
     }
 
-    return filteredPredictions;
+    filteredPredictions.sort((a, b) => a.probability.compareTo(b.probability));
+
+    // Only return the best prediction
+    if (filteredPredictions.isNotEmpty) {
+      _predictions = [filteredPredictions.last];
+    } else {
+      _predictions = [];
+    }
+
+    return _predictions;
   }
 }
