@@ -57,6 +57,8 @@ class CustomTensorProcessor {
     return inputTensor;
   }
 
+  // postprocess is based on the way YOLOv5 postprocess with PyTorch
+  // https://github.com/ultralytics/yolov5/blob/master/detect.py
   List<Prediction> postprocess(Tensor output) {
     // Get the output shape and number of detections
     final outputShape = output.shape;
