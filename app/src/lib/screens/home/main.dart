@@ -1,6 +1,5 @@
 import 'package:art_app_fyp/screens/home/prediction_display.dart';
 import 'package:art_app_fyp/shared/helpers/prediction.dart';
-import 'package:art_app_fyp/shared/widgets/box.dart';
 import 'package:art_app_fyp/screens/home/footer_buttons.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
 import 'package:art_app_fyp/shared/widgets/debugStatus.dart';
