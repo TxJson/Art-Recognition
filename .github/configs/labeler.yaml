@@ -1,0 +1,14 @@
+Application:
+  - example/**/*
+
+"@dart":
+  - "***/*.dart"
+
+"@python":
+  - "***/*.py"
+
+Docs:
+  - "***/*.docs"
+
+Network:
+  - example/**/*
