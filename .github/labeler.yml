@@ -2,13 +2,14 @@ Application:
   - app/**/*
 
 "@dart":
-  - "***/*.dart"
+  - "*.dart"
 
 "@python":
-  - "***/*.py"
+  - "*.py"
 
 Docs:
-  - "***/*.docs"
+  - "*.docs"
+  - "*.md"
 
 Network:
   - network/**/*
