@@ -30,3 +30,15 @@ all:
 
 install:
 	sh setup.sh -s
+
+action-build-apk:
+	@echo "$(BLUE)Building Flutter APK$(RESET)"
+	@cd src && flutter build apk
+	@echo "$(BLUE)Building Flutter APK Release$(RESET)"
+	@cd src && flutter build apk --release
+
+action-build-appbundle:
+	@echo "$(BLUE)Building Flutter App Bundle$(RESET)"
+	@cd src && flutter build appbundle
+	@echo "$(BLUE)Building Flutter App Bundle Release$(RESET)"
+	@cd src && flutter build appbundle --release
