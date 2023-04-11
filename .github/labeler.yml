@@ -1,14 +1,16 @@
 Application:
   - app/**/*
 
-"@dart":
-  - any: [".dart"]
+'@dart':
+    - '**/*.dart'
 
-"@python":
-  - any: [".py"]
+
+'@python':
+  - '**/*.py'
 
 Docs:
-  - any: [".md", ".docs"]
+  - '**/*.md'
+  - '**/*.docs'
 
 Network:
   - network/**/*
