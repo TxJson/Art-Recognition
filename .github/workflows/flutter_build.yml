@@ -8,8 +8,6 @@ on:
   push:
     paths:
       - "**/app"
-    paths-ignore:
-      - "*.md"
 jobs:
   build:
     name: Flutter Build
