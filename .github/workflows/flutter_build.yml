@@ -17,7 +17,7 @@ jobs:
         working-directory: ./app
     env:
       JAVA_VERSION: "11.0"
-      FLUTTER_VERSION: "2.5.3"
+      FLUTTER_VERSION: "3.7.5"
     steps:    
       - name: Checkout Code
         uses: actions/checkout@v2
