@@ -1,5 +1,5 @@
 Application:
-  - example/**/*
+  - app/**/*
 
 "@dart":
   - "***/*.dart"
@@ -11,4 +11,4 @@ Docs:
   - "***/*.docs"
 
 Network:
-  - example/**/*
+  - network/**/*
