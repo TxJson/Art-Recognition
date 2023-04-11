@@ -5,10 +5,12 @@ name: Flutter Build
 on:
   on: [push, pull_request]
 
+  pull_request:
   push:
+    paths:
+      - "**/app"
     paths-ignore:
-      - '**/network'
-
+      - "*.md"
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
