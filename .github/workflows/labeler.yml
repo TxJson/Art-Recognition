@@ -10,5 +10,6 @@ jobs:
     steps:
     - name: Apply Labels
       uses: actions/labeler@v4
-      repo-token: "${{ secrets.GITHUB_TOKEN }}"
-      sync-labels: ''
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        sync-labels: ''
