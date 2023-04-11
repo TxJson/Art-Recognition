@@ -12,11 +12,12 @@ jobs:
   build:
     name: Flutter Build
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: ./app
     env:
       JAVA_VERSION: "11.0"
       FLUTTER_VERSION: "2.5.3"
-    run:
-      working-directory: ./app
     steps:    
       - name: Checkout Code
         uses: actions/checkout@v2
