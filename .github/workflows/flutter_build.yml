@@ -32,8 +32,8 @@ jobs:
         with:
           flutter-version: ${{env.FLUTTER_VERSION}}
 
-      - name: Build Flutter APK
-        run: make action-build-apk
-
       - name: Build Flutter App Bundle
         run: make action-build-appbundle
+
+      - name: Build Flutter APK
+        run: make action-build-apk
