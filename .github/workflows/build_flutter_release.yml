@@ -1,7 +1,4 @@
 name: Create Release
-concurrency:
-  group: ${{ github.head_ref }}
-  cancel-in-progress: true
 
 on: workflow_dispatch # Only manually build release
 jobs:
