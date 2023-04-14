@@ -16,6 +16,10 @@ run-app:
 	@echo "Running Application"
 	@cd app && make
 
+build-app-release:
+	@echo "Building app release"
+	@cd app && make action-build-release
+
 run-be:
 	@echo "Running Network"
 	@cd network && make
