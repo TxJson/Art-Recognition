@@ -1,4 +1,4 @@
-Application:
+application:
   - app/**/*
 
 '@dart':
@@ -8,9 +8,13 @@ Application:
 '@python':
   - '**/*.py'
 
-Docs:
+docs:
   - '**/*.md'
   - '**/*.docs'
 
-Network:
+network:
   - network/**/*
+
+'@gitflow':
+  - .github/**/*
+  - .gitignore
