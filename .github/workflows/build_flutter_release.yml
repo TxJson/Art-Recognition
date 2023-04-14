@@ -12,9 +12,9 @@ jobs:
       RELEASE_VERSION: ${{ vars.RELEASE_VERSION }}
       JAVA_VERSION: "11.0"
       FLUTTER_VERSION: "3.7.5"
-      FLUTTER_RELEASE_APPBUNDLE: "app/src/build/app/outputs/bundle/release"
+      FLUTTER_RELEASE_APPBUNDLE: "./src/build/app/outputs/bundle/release"
       FLUTTER_RELEASE_APPBUNDLE_FILE: "app-release.aap"
-      FLUTTER_RELEASE_APK: "app/src/build/app/outputs/flutter-apk"
+      FLUTTER_RELEASE_APK: "./src/build/app/outputs/flutter-apk"
       FLUTTER_RELEASE_APK_FILE: "app-release.apk"
     steps:
       - name: Checkout Code
@@ -30,11 +30,11 @@ jobs:
         with:
           flutter-version: ${{env.FLUTTER_VERSION}}
 
-      - name: Build Flutter App Bundle Release
-        run: make action-build-appbundle
-
       - name: Build Flutter APK Release
         run: make action-build-apk
+
+      - name: Build Flutter App Bundle Release
+        run: make action-build-appbundle
 
       - name: Get current date
         id: date
@@ -53,16 +53,6 @@ jobs:
           draft: false
           prerelease: false
       
-      - name: Upload Flutter Bundle Artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.FLUTTER_RELEASE_APPBUNDLE }}
-          asset_name: app-release.aab
-          asset_content_type: application/zip
-
       - name: Upload Flutter APK Artifact
         uses: actions/upload-release-asset@v1
         env:
@@ -70,5 +60,16 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.FLUTTER_RELEASE_APK }}
-          asset_name: app-release.apk
+          asset_name: ${{ env.FLUTTER_RELEASE_APK_FILE }}
+          asset_content_type: application/zip
+
+
+      - name: Upload Flutter Bundle Artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.FLUTTER_RELEASE_APPBUNDLE }}
+          asset_name: ${{ env.FLUTTER_RELEASE_APPBUNDLE_FILE }}
           asset_content_type: application/zip
