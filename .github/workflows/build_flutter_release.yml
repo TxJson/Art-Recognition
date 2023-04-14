@@ -42,22 +42,24 @@ jobs:
 
       - name: Build Flutter App Bundle Release
         run: make action-build-appbundle
+
+      - name: Build Flutter APK Release
+        run: make action-build-apk
       
       - name: Upload Flutter Bundle Artifact
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: app/src/build/app/outputs/bundle/release
-          asset_name: art-detection.aab
-
-      - name: Build Flutter APK Release
-        run: make action-build-apk
+          asset_name: app-release.aab
 
       - name: Upload Flutter APK Artifact
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/src/build/app/outputs/flutter-apk/app-release.apk
-          asset_name: art-detection.apk
+          asset_path: app/src/build/app/outputs/flutter-apk
+          asset_name: app-release.apk
