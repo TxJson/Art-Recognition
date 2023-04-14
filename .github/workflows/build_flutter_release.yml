@@ -12,7 +12,7 @@ jobs:
       RELEASE_VERSION: ${{ vars.RELEASE_VERSION }}
       JAVA_VERSION: "11.0"
       FLUTTER_VERSION: "3.7.5"
-      FLUTTER_RELEASE_APPBUNDLE: "app/src/build/app/outputs/bundle/release/app-release.aap"
+      FLUTTER_RELEASE_APPBUNDLE: "app/src/build/app/outputs/bundle/release/app-release.aab"
       FLUTTER_RELEASE_APPBUNDLE_FILE: "app-release.aab"
       FLUTTER_RELEASE_APK: "app/src/build/app/outputs/flutter-apk/app-release.apk"
       FLUTTER_RELEASE_APK_FILE: "app-release.apk"
