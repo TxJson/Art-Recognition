@@ -8,6 +8,8 @@ concurrency:
 on: 
   workflow_dispatch:
   pull_request:
+    paths:
+      - "**/app"
   push:
     paths:
       - "**/app"
