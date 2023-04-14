@@ -42,3 +42,12 @@ action-build-apk:
 action-build-apk-release:
 	@echo "$(BLUE)Building Flutter APK Release$(RESET)"
 	@cd src && flutter build apk --release
+
+action-build-appbundle-release:
+	@echo "$(BLUE)Building Flutter App Bundle Release$(RESET)"
+	@cd src && flutter build appbundle --release
+
+# Do not run this - app may not be functional on an iOS device right now
+action-build-ios-release:
+	@echo "$(BLUE)Building Flutter App Bundle Release$(RESET)"
+	@cd src && flutter build ios --release
