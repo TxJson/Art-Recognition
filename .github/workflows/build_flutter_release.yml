@@ -33,26 +33,8 @@ jobs:
       - name: Build Flutter App Bundle Release
         run: make action-build-appbundle
 
-       - name: Check App Bundle Exists
-        id: file_check_appbundle
-        run: |
-          if git status -s | grep -x "** [${{ env.FLUTTER_RELEASE_APPBUNDLE }}/${{ FLUTTER_RELEASE_APPBUNDLE_FILE }}]"; then
-            echo "check_result=true" >> $GITHUB_OUTPUT
-          else
-            echo "check_result=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build Flutter APK Release
         run: make action-build-apk
-
-      - name: Check App APK Exists
-        id: file_check_apk
-        run: |
-          if git status -s | grep -x "** [${{ env.FLUTTER_RELEASE_APK }}/${{ FLUTTER_RELEASE_APK_FILE }}]"; then
-            echo "check_result=true" >> $GITHUB_OUTPUT
-          else
-            echo "check_result=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: Get current date
         id: date
@@ -60,7 +42,6 @@ jobs:
 
       - name: Create Release
         id: create_release
-        if: steps.file_check.outputs.check_result == 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
