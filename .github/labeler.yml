@@ -16,5 +16,5 @@ network:
   - network/**/*
 
 '@gitflow':
-  - .github
+  - .github/**/*
   - .gitignore
