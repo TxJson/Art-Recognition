@@ -9,8 +9,14 @@ jobs:
       run:
         working-directory: ./app
     env:
+      RELEASE_VERSION: ${{ vars.RELEASE_VERSION }}
       JAVA_VERSION: "11.0"
       FLUTTER_VERSION: "3.7.5"
+      
+      FLUTTER_RELEASE_APPBUNDLE: app/src/build/app/outputs/bundle/release
+      FLUTTER_RELEASE_APPBUNDLE_FILE: app-release.aap
+      FLUTTER_RELEASE_APK: app/src/build/app/outputs/flutter-apk
+      FLUTTER_RELEASE_APK_FILE: app-release.apk
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -25,22 +31,47 @@ jobs:
         with:
           flutter-version: ${{env.FLUTTER_VERSION}}
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
       - name: Build Flutter App Bundle Release
         run: make action-build-appbundle
 
+       - name: Check App Bundle Exists
+        id: file_check_appbundle
+        run: |
+          if git status -s | grep -x "** [${{ env.FLUTTER_RELEASE_APPBUNDLE }}/${{ FLUTTER_RELEASE_APPBUNDLE_FILE }}]"; then
+            echo "check_result=true" >> $GITHUB_OUTPUT
+          else
+            echo "check_result=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build Flutter APK Release
         run: make action-build-apk
+
+      - name: Check App APK Exists
+        id: file_check_apk
+        run: |
+          if git status -s | grep -x "** [${{ env.FLUTTER_RELEASE_APK }}/${{ FLUTTER_RELEASE_APK_FILE }}]"; then
+            echo "check_result=true" >> $GITHUB_OUTPUT
+          else
+            echo "check_result=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+
+      - name: Create Release
+        id: create_release
+        if: steps.file_check.outputs.check_result == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: nightly-tag-${{ steps.date.outputs.date }}
+          RELEASE_NAME: nightly-release-${{ steps.date.outputs.date }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ env.RELEASE_VERSION }} [${{ steps.date.outputs.date }}]
+          draft: false
+          prerelease: false
       
       - name: Upload Flutter Bundle Artifact
         uses: actions/upload-release-asset@v1
@@ -48,8 +79,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/src/build/app/outputs/bundle/release
+          asset_path: ${{ env.FLUTTER_RELEASE_APPBUNDLE }}
           asset_name: app-release.aab
+
 
       - name: Upload Flutter APK Artifact
         uses: actions/upload-release-asset@v1
@@ -57,5 +89,5 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/src/build/app/outputs/flutter-apk
+          asset_path: ${{ env.FLUTTER_RELEASE_APK }}
           asset_name: app-release.apk
