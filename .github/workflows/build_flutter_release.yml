@@ -61,7 +61,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.FLUTTER_RELEASE_APPBUNDLE }}
           asset_name: app-release.aab
-
+          asset_content_type: application/zip
 
       - name: Upload Flutter APK Artifact
         uses: actions/upload-release-asset@v1
@@ -71,3 +71,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ env.FLUTTER_RELEASE_APK }}
           asset_name: app-release.apk
+          asset_content_type: application/zip
