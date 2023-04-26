@@ -38,8 +38,6 @@ class CustomTensorProcessor {
     final shapeLength = min(_interpreter.getInputTensor(0).shape[1],
         _interpreter.getInputTensor(0).shape[2]);
 
-    // final quantOps = _interpreter.getInputTensor(0).params;
-
     if (!_preprocessorInitialized) {
       _imageProcessor = ImageProcessorBuilder()
           .add(ResizeWithCropOrPadOp(minLength, minLength))
@@ -60,9 +58,8 @@ class CustomTensorProcessor {
   // postprocess is based on the way YOLOv5 postprocess with PyTorch
   // https://github.com/ultralytics/yolov5/blob/master/detect.py
   List<Prediction> postprocess(Tensor output) {
-    // Get the output shape and number of detections
-    final outputShape = output.shape;
-    final detectionCount = outputShape[1];
+    // Get the number of detections
+    final detectionCount = output.shape[1];
 
     // Get the output data as a Float32List
     final outputData = output.data.buffer.asFloat32List();
@@ -104,7 +101,7 @@ class CustomTensorProcessor {
       }
     }
 
-    // There is probably a more efficient way to do this
+    // There is probably a more efficient way to do this...
     // Filters out duplicates of detections and returns only the one with the
     // highest probability
     List<Prediction> filteredPredictions = [];
@@ -118,9 +115,10 @@ class CustomTensorProcessor {
       }
     }
 
+    // Sort by probability / confidence
     filteredPredictions.sort((a, b) => a.probability.compareTo(b.probability));
 
-    // Only return the best prediction
+    // Only return the prediction with the highest confidence
     if (filteredPredictions.isNotEmpty) {
       _predictions = [filteredPredictions.last];
     } else {

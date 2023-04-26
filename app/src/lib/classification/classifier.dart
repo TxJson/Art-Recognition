@@ -27,7 +27,7 @@ class Classifier {
   late Interpreter _interpreter;
 
   Classifier(
-      {required Model model, this.threshold = 0.5}) // Threshold between 0 - 1})
+      {required Model model, this.threshold = 0.7}) // Threshold between 0 - 1})
       : _model = model;
 
   // Used in image pre-processing
