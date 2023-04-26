@@ -72,30 +72,31 @@ class CustomTensorProcessor {
       // Get the probability score for this detection
       // + 4 because probability score comes after the bounding box variables in YOLOv5
       // (x, y, width, height, and probability score)
-      final probability = outputData[detectionOffset + 4];
+      final confidence = outputData[detectionOffset + 4];
 
-      // Get the class ID with the highest score for each detection
-      int classId = -1;
-      double maxClassProbability = 0.0;
-      for (int classIndex = 0; classIndex < _classes; classIndex++) {
-        final classProbability =
-            outputData[detectionOffset + yolov5Bounding + classIndex];
-        if (classProbability > maxClassProbability) {
-          classId = classIndex;
-          maxClassProbability = classProbability;
+      // Check that probability is higher than the set threshold
+      // If the probability is lower than the threshold, there is no need to check for the class ID
+      if (confidence > _threshold) {
+        // Get the class ID with the highest score for each detection
+        int classId = -1;
+        double maxClassProbability = 0.0;
+        for (int classIndex = 0; classIndex < _classes; classIndex++) {
+          final classProbability =
+              outputData[detectionOffset + yolov5Bounding + classIndex];
+          if (classProbability > maxClassProbability) {
+            classId = classIndex;
+            maxClassProbability = classProbability;
+          }
         }
-      }
 
-      // TODO: Process bounding boxes
-      // The rest of the values returned from YOLOv5 can probably be interpreted here as well
-      // Such as the bounding boxes
+        // TODO: Process bounding boxes
+        // The rest of the values returned from YOLOv5 can probably be interpreted here as well
+        // Such as the bounding boxes
 
-      // Check that classId is valid
-      if (classId > -1 && classId <= _classes) {
-        // Check that probability is higher than the set threshold
-        if (probability > _threshold) {
+        // Check that classId is valid
+        if (classId > -1 && classId <= _classes) {
           unfilteredPredictions
-              .add(Prediction(classId, labels[classId], probability));
+              .add(Prediction(classId, labels[classId], confidence));
         }
       }
     }
