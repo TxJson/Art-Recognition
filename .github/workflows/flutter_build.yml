@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "**/app"
+      - "**/app/**"
   push:
     paths:
-      - "**/app"
+      - "**/app/**"
 jobs:
   build:
     name: Flutter Build
