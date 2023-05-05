@@ -48,7 +48,7 @@ jobs:
           TAG_NAME: nightly-tag-${{ steps.date.outputs.date }}
           RELEASE_NAME: nightly-release-${{ steps.date.outputs.date }}
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: release-${{ steps.date.outputs.date }}-v${{ env.RELEASE_VERSION }}
           release_name: Release ${{ env.RELEASE_VERSION }} [${{ steps.date.outputs.date }}]
           draft: false
           prerelease: false
