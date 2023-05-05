@@ -15,15 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:art_app_fyp/shared/helpers/validators.dart';
 import 'package:logger/logger.dart';
 
-// String DEFAULT_MODEL = 'assets/default_ssd_mobilenet/detect.tflite';
-// String DEFAULT_LABELS = 'assets/default_ssd_mobilenet/labels.txt';
-// String DEFAULT_MODEL = 'assets/yolov5_license_plates/detect.tflite';
-// String DEFAULT_LABELS = 'assets/yolov5_license_plates/labels.txt';
-// String DEFAULT_MODEL = 'assets/yolov5n_art_style/detect.tflite';
-// String DEFAULT_LABELS = 'assets/yolov5n_art_style/labels.txt';
-// String DEFAULT_MODEL = 'assets/default_yolov5/detect.tflite';
-// String DEFAULT_LABELS = 'assets/default_yolov5/labels.txt';
-
 // Adapted from Flutter Camera Package Documentation
 // https://pub.dev/packages/camera
 class CameraView extends StatefulWidget {
@@ -94,7 +85,7 @@ class CameraViewState extends State<CameraView> {
 
   // Only call setState, if the component is mounted
   // Setting state when component is not active causes exceptions
-  // this mitigate those exceptions
+  // this should mitigate those exceptions
   void setStateIfMounted(void Function() func) {
     if (mounted) {
       setState(func);
@@ -211,6 +202,7 @@ class CameraViewState extends State<CameraView> {
     super.dispose();
   }
 
+  // If tab is switched, stop camera
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (controller == null) {

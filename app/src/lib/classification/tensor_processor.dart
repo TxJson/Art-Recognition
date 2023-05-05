@@ -38,8 +38,6 @@ class CustomTensorProcessor {
     final shapeLength = min(_interpreter.getInputTensor(0).shape[1],
         _interpreter.getInputTensor(0).shape[2]);
 
-    // final quantOps = _interpreter.getInputTensor(0).params;
-
     if (!_preprocessorInitialized) {
       _imageProcessor = ImageProcessorBuilder()
           .add(ResizeWithCropOrPadOp(minLength, minLength))
@@ -60,9 +58,8 @@ class CustomTensorProcessor {
   // postprocess is based on the way YOLOv5 postprocess with PyTorch
   // https://github.com/ultralytics/yolov5/blob/master/detect.py
   List<Prediction> postprocess(Tensor output) {
-    // Get the output shape and number of detections
-    final outputShape = output.shape;
-    final detectionCount = outputShape[1];
+    // Get the number of detections
+    final detectionCount = output.shape[1];
 
     // Get the output data as a Float32List
     final outputData = output.data.buffer.asFloat32List();
@@ -75,35 +72,36 @@ class CustomTensorProcessor {
       // Get the probability score for this detection
       // + 4 because probability score comes after the bounding box variables in YOLOv5
       // (x, y, width, height, and probability score)
-      final probability = outputData[detectionOffset + (yolov5Bounding - 1)];
+      final confidence = outputData[detectionOffset + 4];
 
-      // Get the class ID for this detection
-      int classId = -1;
-      double maxClassProbability = 0.0;
-      for (int classIndex = 0; classIndex < _classes; classIndex++) {
-        final classProbability =
-            outputData[detectionOffset + yolov5Bounding + classIndex];
-        if (classProbability > maxClassProbability) {
-          classId = classIndex;
-          maxClassProbability = classProbability;
+      // Check that probability is higher than the set threshold
+      // If the probability is lower than the threshold, there is no need to check for the class ID
+      if (confidence > _threshold) {
+        // Get the class ID with the highest score for each detection
+        int classId = -1;
+        double maxClassProbability = 0.0;
+        for (int classIndex = 0; classIndex < _classes; classIndex++) {
+          final classProbability =
+              outputData[detectionOffset + yolov5Bounding + classIndex];
+          if (classProbability > maxClassProbability) {
+            classId = classIndex;
+            maxClassProbability = classProbability;
+          }
         }
-      }
 
-      // TODO: Process bounding boxes
-      // The rest of the values returned from YOLOv5 can probably be interpreted here as well
-      // Such as the bounding boxes
+        // TODO: Process bounding boxes
+        // The rest of the values returned from YOLOv5 can probably be interpreted here as well
+        // Such as the bounding boxes
 
-      // Check that classId is valid
-      if (classId > -1 && classId <= classes) {
-        // Check that probability is higher than the set threshold
-        if (probability > _threshold) {
+        // Check that classId is valid
+        if (classId > -1 && classId <= _classes) {
           unfilteredPredictions
-              .add(Prediction(classId, labels[classId], probability));
+              .add(Prediction(classId, labels[classId], confidence));
         }
       }
     }
 
-    // There is probably a more efficient way to do this
+    // There is probably a more efficient way to do this...
     // Filters out duplicates of detections and returns only the one with the
     // highest probability
     List<Prediction> filteredPredictions = [];
@@ -117,9 +115,10 @@ class CustomTensorProcessor {
       }
     }
 
+    // Sort by probability / confidence
     filteredPredictions.sort((a, b) => a.probability.compareTo(b.probability));
 
-    // Only return the best prediction
+    // Only return the prediction with the highest confidence
     if (filteredPredictions.isNotEmpty) {
       _predictions = [filteredPredictions.last];
     } else {

@@ -1,6 +1,8 @@
 import 'package:art_app_fyp/shared/helpers/math/vector2.dart';
 import 'package:flutter/material.dart';
 
+// @redundant - unused
+// Keep for now - might be useful for future implementation
 class CameraInfo {
   Size inputSize;
   Size screenSize;

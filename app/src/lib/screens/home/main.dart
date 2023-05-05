@@ -2,7 +2,6 @@ import 'package:art_app_fyp/screens/home/prediction_display.dart';
 import 'package:art_app_fyp/shared/helpers/prediction.dart';
 import 'package:art_app_fyp/screens/home/footer_buttons.dart';
 import 'package:art_app_fyp/shared/helpers/utilities.dart';
-import 'package:art_app_fyp/shared/widgets/debugStatus.dart';
 import 'package:art_app_fyp/screens/home/camera/camera.dart';
 import 'package:art_app_fyp/store/actions.dart';
 import 'package:camera/camera.dart';
@@ -12,18 +11,6 @@ import 'package:flutter_redux/flutter_redux.dart';
 
 class MyHome extends StatelessWidget {
   const MyHome({Key? key}) : super(key: key);
-
-  // Future<void> loadModel() async {
-  //   String res = await Tflite.loadModel(
-  //       model: "assets/ssd_mobilenet.tflite",
-  //       labels: "assets/labels.txt",
-  //       numThreads: 1, // defaults to 1
-  //       isAsset:
-  //           true, // defaults to true, set to false to load resources outside assets
-  //       useGpuDelegate:
-  //           false // defaults to false, set to true to use GPU delegate
-  //       );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +62,7 @@ class MyHome extends StatelessWidget {
                     predictions: store.state.predictions,
                     detectionState: store.state.detectionState),
 
-                /// Set button icon for detecting artwork
+                /// Set button used to toggle the detection functionality
                 // floatingActionButton: SizedBox(
                 //     height: 100,
                 //     child: Column(children: <Widget>[
@@ -120,17 +107,3 @@ class MyHome extends StatelessWidget {
             }));
   }
 }
-
-// Widget boundingBoxes(List<Prediction>? predictions) {
-//   if (predictions == null) {
-//     return Container();
-//   }
-
-//   return Stack(
-//     children: predictions
-//         .map((prediction) => BoxWidget(
-//               prediction,
-//             ))
-//         .toList(),
-//   );
-// }
