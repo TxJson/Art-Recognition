@@ -9,9 +9,11 @@ on:
   pull_request:
     paths:
       - "**/app/**"
+      - "./.github/workflows/flutter_build.yml"
   push:
     paths:
       - "**/app/**"
+      - "./.github/workflows/flutter_build.yml"
 jobs:
   build:
     name: Flutter Build
