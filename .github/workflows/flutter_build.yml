@@ -1,17 +1,19 @@
 name: Flutter Build
 
-concurrency:
-  group: ${{ github.head_ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.head_ref }}
+#   cancel-in-progress: true
 
 on: 
   workflow_dispatch:
   pull_request:
     paths:
       - "**/app/**"
+      - "./.github/workflows/flutter_build.yml"
   push:
     paths:
       - "**/app/**"
+      - "./.github/workflows/flutter_build.yml"
 jobs:
   build:
     name: Flutter Build
