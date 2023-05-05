@@ -27,7 +27,8 @@ class Classifier {
   late Interpreter _interpreter;
 
   Classifier(
-      {required Model model, this.threshold = 0.5}) // Threshold between 0 - 1})
+      {required Model model,
+      this.threshold = 0.5}) // Threshold between 0 - 1, default is 0.5 (50%)
       : _model = model;
 
   // Used in image pre-processing
@@ -37,18 +38,6 @@ class Classifier {
     if (!_model.labelsLoaded) {
       await _model.loadLabels();
     }
-    // if (labels is String) {
-    //   if (labels.isEmpty) {
-    //     // Warn if we are loading an empty list
-    //     logger.w('No labels passed: ', labels);
-    //     return;
-    //   }
-    //   await loadLabels(labels);
-    // } else if (labels is List<String>) {
-    //   labelList = labels;
-    // } else {
-    //   logger.w('Something went wrong when trying to retrieve the labels');
-    // }
 
     // Only necessary if we want to pass
     if (!_model.modelLoaded) {
@@ -70,34 +59,6 @@ class Classifier {
           threshold, _model.detectionsCount);
     }
   }
-
-  // Future loadLabels(String labels) async {
-  //   try {
-  //     labelList = await rootBundle.loadString(labels).then((lbls) {
-  //       return lbls.toString().split('\n');
-  //     });
-
-  //     if (labelList.isEmpty) {
-  //       // Warn if we are loading an empty list
-  //       logger.w('Label list is empty: ', labels);
-  //     }
-  //   } catch (e) {
-  //     logger.e('An error occured while loading labels:', e);
-  //   }
-  // }
-
-  // Future loadModel(String model) async {
-  //   // Interpreter prefers it without the "assets/"" string
-  //   // Still want to allow it to be passed for clarity
-  //   model = Utilities.removeIfExists(model, 'assets/');
-
-  //   await Interpreter.fromAsset(model).then((Interpreter _interpreter) {
-  //     interpreter = _interpreter;
-  //     logger.i('Successfully loaded model');
-  //   }).catchError((Object e) {
-  //     logger.e('An error occured while loading the model', e);
-  //   });
-  // }
 
   /// @reallocate Set true to reallocate interpreter tensors
   ///
