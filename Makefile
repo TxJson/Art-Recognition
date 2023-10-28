@@ -4,6 +4,9 @@ install:
 	@cd app && make install
 	@cd python && make install
 
+enter-venv:
+	@cd python && make enter-venv
+
 # Install with force
 install-f:
 	@cd app && make install

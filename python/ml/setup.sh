@@ -18,7 +18,7 @@ install_dependencies()
     echo "Installing Dependencies"
 
     echo "Installing local dependencies"
-    pip3 install -r $BASEDIR/local_dep.txt --user --no-warn-script-location
+    pip3 install -r $BASEDIR/requirements.txt --no-warn-script-location
 
     # Download and install datasets
     # Install YOLOv5
@@ -34,7 +34,7 @@ install_dependencies()
 
     if [[ -d "$DEPDIR/yolov5" ]]; then        
         cd $DEPDIR/yolov5
-        pip3 install -r requirements.txt --user --no-warn-script-location # Install pip dependencies
+        pip3 install -r requirements.txt --no-warn-script-location # Install pip dependencies
         cd $BASEDIR
     else
         echo "Unable to locate $DEPDIR/yolov5, skipping dependency installation step"
@@ -69,7 +69,7 @@ setup_modules()
 
 setupForce()
 {
-    if [[ "$parsedVersion" -gt minParsed ]]
+    if [[ "$parsedVersion" -gt minParsed || "$parsedVersion" -eq minParsed ]]
     then 
         clean
         setup_dependencies
@@ -82,7 +82,7 @@ setupForce()
 
 setup()
 {
-    if [[ "$parsedVersion" -gt minParsed ]]
+    if [[ "$parsedVersion" -gt minParsed || "$parsedVersion" -eq minParsed ]]
     then 
         setup_dependencies
         setup_modules        
@@ -117,6 +117,12 @@ clean()
     # Remove generated modules and datasets
     removeifexists $SRCDIR "datasets" "modules" "dependencies"
 }
+
+if [[ "$VIRTUAL_ENV" -eq "" ]]
+then
+    echo "Not in venv, cannot proceed with ML installation"
+    exit
+fi
 
 cleanParam="c"
 setupParam="s"

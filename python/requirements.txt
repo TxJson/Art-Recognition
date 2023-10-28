@@ -1,0 +1,5 @@
+# Dependencies
+# Usage: pip install -r dependencies.txt --user
+
+# Base ------------------------------------------------------------------------
+graphene # GraphQL for python
